@@ -1,11 +1,11 @@
 /* ==========================================================================
-   CONFIGURAÇÃO OFICIAL DO BACKEND (FIREBASE CLOUD)
+   CONFIGURAÇÃO OFICIAL DO BACKEND (FIREBASE CLOUD - REVISADO)
    ========================================================================== */
 import { initializeApp } from "https://gstatic.com";
 import { getFirestore } from "https://gstatic.com";
 import { getAuth } from "https://gstatic.com";
 
-// Suas chaves oficiais do console integradas de forma segura
+// Suas chaves oficiais do console ajustadas e sem cortes de texto
 const firebaseConfig = {
     apiKey: "AIzaSyCYSzG4PPzs9w-PT195VZKp2MvYdyX0Puc",
     authDomain: "vacinaapp-2cca0.firebaseapp.com",
@@ -15,19 +15,19 @@ const firebaseConfig = {
     appId: "1:317556925550:web:0c1ed36f43cca960dcf27f"
 };
 
-// Inicializa a conexão com o servidor da Google
+// Inicializa os serviços em nuvem de forma definitiva
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
-// Estado global do aplicativo atualizado na nuvem
+// Estado global do aplicativo conectado à nuvem (Obrigatório para o app.js)
 export const appState = {
-    usuarioLogado: null,
-    perfilAtual: "principal",
-    carteira: []
+    usuarioLogado: null, 
+    perfilAtual: "principal", 
+    carteira: [] 
 };
 
-// Lista de vacinas do SUS (Mantida para renderização)
+// Lista de vacinas do SUS totalmente organizada e limpa
 export const CALENDARIO_SUS = [
     { 
         nome: "BCG", 
