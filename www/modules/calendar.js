@@ -129,10 +129,3 @@ document.addEventListener('DOMContentLoaded', () => {
 window.renderistarListaFiltrada = renderizarListaFiltrada;
 
 
-/*
- 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 
-
- git remote set-url origin https://matheuspcgamer2025-stack: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 @://github.com
-
-
-*/

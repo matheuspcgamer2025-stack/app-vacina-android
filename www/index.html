@@ -3,7 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Substitua a linha do viewport atual por esta no seu <head>: -->
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
     <title>VacinaApp - Carteira Digital</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="style.css">
@@ -147,14 +150,15 @@
         <!-- CABEÇALHO OFICIAL COM MENU HAMBÚRGUER -->
         <header class="app-header">
             <div class="header-left">
+                <!-- APENAS o botão com os três tracinhos na ponta esquerda -->
                 <button id="btn-menu-hamburger" class="btn-icon">☰</button>
-                <h1 id="app-title">Dashboard</h1>
             </div>
             <div class="header-right">
+                <!-- APENAS o botão de mudar de tema na ponta direita -->
                 <button id="main-theme-toggle" class="btn-theme-toggle">🌓</button>
-                <span class="user-badge" id="user-display">Usuário</span>
             </div>
         </header>
+
 
         <!-- CONTEÚDO SCROLLÁVEL DO APLICATIVO -->
         <main class="app-content">
@@ -225,12 +229,13 @@
 
 
             <!-- 3. CALENDÁRIO DE VACINAS -->
-                     <!-- 3. CALENDÁRIO DE VACINAS -->
+            <!-- 3. CALENDÁRIO DE VACINAS -->
             <section id="screen-calendar" class="sub-screen hidden">
-                
+
                 <!-- Nova Barra de Pesquisa de Vacinas -->
                 <div class="card search-vax-card" style="margin-bottom: 1rem;">
-                    <input type="text" id="input-busca-calendario" placeholder="🔍 Procurar vacina por nome (Ex: BCG, Penta...)" style="margin-bottom: 0;">
+                    <input type="text" id="input-busca-calendario"
+                        placeholder="🔍 Procurar vacina por nome (Ex: BCG, Penta...)" style="margin-bottom: 0;">
                 </div>
 
                 <!-- Abas de Filtro por Idade (Apenas uma vez) -->
@@ -243,7 +248,7 @@
 
                 <!-- Container onde a lista de vacinas será injetada (Apenas uma vez) -->
                 <div id="calendar-list" class="list-container"></div>
-                
+
             </section>
 
 

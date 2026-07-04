@@ -46,9 +46,8 @@ export function inicializarAutentication(onLoginSuccess) {
             return;
         }
 
+        // Armazena o identificador e limpa as telas para o login local
         appState.usuarioLogado = id;
-        const userDisplay = document.getElementById('user-display');
-        if (userDisplay) userDisplay.innerText = id.split('@')[0];
         
         screenLogin.classList.add('hidden');
         appMain.classList.remove('hidden');
@@ -67,9 +66,8 @@ export function inicializarAutentication(onLoginSuccess) {
             return;
         }
 
+        // Armazena o identificador e limpa as telas para o cadastro local
         appState.usuarioLogado = id;
-        const userDisplay = document.getElementById('user-display');
-        if (userDisplay) userDisplay.innerText = id.split('@')[0];
         
         screenRegister.classList.add('hidden');
         appMain.classList.remove('hidden');
