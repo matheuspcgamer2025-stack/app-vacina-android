@@ -26,6 +26,106 @@ body.dark-theme {
     --shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.4);
 }
 /* ==========================================================================
+   1B. TELA DE ABERTURA ANIMADA (SPLASH SCREEN)
+   ========================================================================== */
+#app-splash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #0b0b0e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    transition: opacity 0.5s ease;
+}
+
+/* Construção Geométrica do Zé Gotinha */
+.ze-gotinha-logo {
+    width: 5rem;
+    height: 6.25rem;
+    background: #ffffff;
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    position: relative;
+    box-shadow: 0 0 1.25rem rgba(255, 255, 255, 0.2);
+    animation: pulsarGota 1.5s infinite alternate ease-in-out;
+}
+
+.gota-topo {
+    position: absolute;
+    top: -1.875rem;
+    left: 1.5rem;
+    width: 2rem;
+    height: 2.5rem;
+    background: #ffffff;
+    border-radius: 100% 0% 50% 50% / 100% 0% 100% 0%;
+    transform: rotate(-45deg);
+}
+
+.ze-olhos {
+    display: flex;
+    justify-content: space-between;
+    width: 1.75rem;
+    position: absolute;
+    top: 2.5rem;
+    left: 1.625rem;
+}
+
+.ze-olho {
+    width: 0.5rem;
+    height: 0.75rem;
+    background: #111115;
+    border-radius: 50%;
+}
+
+.ze-sorriso {
+    width: 1.25rem;
+    height: 0.625rem;
+    border-bottom: 4px solid #111115;
+    border-radius: 0 0 50% 50%;
+    position: absolute;
+    top: 3.75rem;
+    left: 1.875rem;
+}
+
+/* Tipografia e Textos da Abertura */
+.splash-title {
+    color: #ffffff;
+    font-family: sans-serif;
+    margin-top: 1.5rem;
+    font-size: 1.625rem;
+    letter-spacing: -0.03rem;
+}
+
+.splash-highlight {
+    color: var(--primary);
+}
+
+.splash-sub {
+    color: var(--text-secondary);
+    font-family: sans-serif;
+    font-size: 0.8125rem;
+    margin-top: 0.5rem;
+    opacity: 0.7;
+}
+
+/* Animação Suave de Pulsação */
+@keyframes pulsarGota {
+    from {
+        transform: scale(1);
+        filter: drop-shadow(0 0 2px rgba(157, 78, 221, 0.2));
+    }
+    to {
+        transform: scale(1.08);
+        filter: drop-shadow(0 0 1.25rem rgba(157, 78, 221, 0.5));
+    }
+}
+
+
+/* ==========================================================================
    2. REGRAS GERAIS E RESETS (OTIMIZADO PARA APLICATIVOS)
    ========================================================================== */
 * { 

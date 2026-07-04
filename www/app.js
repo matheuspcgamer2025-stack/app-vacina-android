@@ -9,55 +9,41 @@ import { configurarFormularioCarteira, renderizarCarteira } from './modules/wall
 import { renderizarLembretes, configurarNotificacoes } from './modules/reminders.js';
 import { buscarEExibirPosto } from './modules/gps.js';
 
-// 2. LOGICAS DE INICIALIZAÇÃO DO APP:
-// No bloco de inicialização geral, configure as funções passando o comando de renderizar as abas
-inicializarNovasFuncoes(() => {
-    // Essa linha força a carteira a se redesenhar quando trocamos o dependente
-    window.mudarAba('wallet', document.querySelector('.nav-item')); 
-});
-
-inicializarSidebar();
-
-inicializarAutentication(() => {
-    inicializarDashboard();
-});
-
-configurarFormularioCarteira(() => {
-    renderizarCarteira(atualizarAbaCarteira);
-});
-
-function atualizarAbaCarteira() {
-    renderizarCarteira(atualizarAbaCarteira);
-}
-
-// 3. GERENCIADOR DE ABAS:
-window.mudarAba = function(targetId, elementoBotao) {
-    mudarAba(targetId, elementoBotao);
-    if(targetId === 'dashboard') inicializarDashboard();
-    if(targetId === 'calendar') filtrarCalendario('criança');
-    if(targetId === 'wallet') renderizarCarteira(atualizarAbaCarteira);
-    if(targetId === 'reminders') renderizarLembretes();
-};
-
-window.filtrarCalendario = filtrarCalendario;
-window.configurarNotificacoes = configurarNotificacoes;
-window.localizarPostoMaisProximo = buscarEExibirPosto;
-
-// 4. ESCUTADOR DO BOTÃO DE BUSCA (COLOQUE EXATAMENTE AQUI NO FINAL):
+// 2. LOGICAS DE INICIALIZAÇÃO E CICLO DE VIDA DO APP:
 document.addEventListener('DOMContentLoaded', () => {
+    // Inicializa os seletores de dependentes e recarrega a aba ao mudar de perfil
+    inicializarNovasFuncoes(() => {
+        const botaoAbaCarteira = document.querySelector('.nav-item');
+        if (botaoAbaCarteira) {
+            window.mudarAba('wallet', botaoAbaCarteira); 
+        }
+    });
+
+    inicializarSidebar();
+
+    // Quando o login ou cadastro der certo, puxa os dados e inicia o painel
+    inicializarAutentication(() => {
+        inicializarDashboard();
+    });
+
+    // Configura o formulário para apenas redesenhar a lista na tela ao salvar
+    configurarFormularioCarteira(() => {
+        renderizarCarteira();
+    });
+
+    // Gerencia o botão de buscar posto de saúde por CEP/Bairro
     const botaoBuscar = document.getElementById('btn-buscar-posto');
     if (botaoBuscar) {
         botaoBuscar.addEventListener('click', () => {
             buscarEExibirPosto();
         });
     }
-});
 
-document.addEventListener('DOMContentLoaded', () => {
+    // Carrega o tema escuro salvo se o usuário preferir
     const temaSalvo = localStorage.getItem('app_theme');
     if (temaSalvo === 'dark') document.body.classList.add('dark-theme');
 
-    // Escuta cliques em qualquer botão de trocar tema no app
+    // Escuta cliques em qualquer botão de alternar tema no app (Sol/Lua)
     document.querySelectorAll('.btn-theme-toggle').forEach(botao => {
         botao.addEventListener('click', () => {
             document.body.classList.toggle('dark-theme');
@@ -66,3 +52,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// 3. GERENCIADOR GLOBAL DE ABAS (INTERACTION MANAGER):
+window.mudarAba = function(targetId, elementoBotao) {
+    mudarAba(targetId, elementoBotao);
+    if (targetId === 'dashboard') inicializarDashboard();
+    if (targetId === 'calendar') filtrarCalendario('criança');
+    if (targetId === 'wallet') renderizarCarteira();
+    if (targetId === 'reminders') renderizarLembretes();
+};
+
+// Vincula as funções necessárias aos escopos de botões do HTML
+window.filtrarCalendario = filtrarCalendario;
+window.configurarNotificacoes = configurarNotificacoes;
+window.localizarPostoMaisProximo = buscarEExibirPosto;
+
+// 4. MECANISMO DE SAÍDA SUAVE DA TELA DE ABERTURA (ZE GOTINHA)
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        const splash = document.getElementById('app-splash');
+        if (splash) {
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.remove(); // Destrói o elemento para liberar memória do Android
+            }, 500);
+        }
+    }, 2000); // Mantém o Zé Gotinha exibido por 2 segundos exatos
+});
