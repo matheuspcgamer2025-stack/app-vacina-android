@@ -32,7 +32,7 @@ body.dark-theme {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
     background-color: #0b0b0e;
     display: flex;
@@ -141,7 +141,7 @@ body {
     background-color: var(--bg-app); 
     color: var(--text-primary); 
     height: 100vh; 
-    width: 100vw;
+    width: 100%;
     overflow: hidden; /* IMPORTANTE: Destrói o balanço elástico da tela inteira */
     font-size: 1rem;
 }
@@ -149,6 +149,12 @@ body {
 /* Evita qualquer deslocamento horizontal inesperado em telas móveis */
 html {
     overflow-x: hidden;
+}
+
+/* Bloqueia overscroll horizontal e restringe gestos horizontais em contêineres principais */
+html, body, #app-main, .app-content, .screen, .sub-screen {
+    overscroll-behavior-x: none;
+    touch-action: pan-y;
 }
 
 .hidden { 
