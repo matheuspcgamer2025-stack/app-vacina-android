@@ -146,6 +146,11 @@ body {
     font-size: 1rem;
 }
 
+/* Evita qualquer deslocamento horizontal inesperado em telas móveis */
+html {
+    overflow-x: hidden;
+}
+
 .hidden { 
     display: none !important; 
 }
@@ -360,6 +365,11 @@ body .card:hover, body .vax-item:hover, body .login-container:hover {
     margin: 0 auto; 
 }
 
+/* Evita que um gesto horizontal no conteúdo faça a tela principal deslocar-se */
+.app-content {
+    overscroll-behavior-x: none;
+}
+
 /* ==========================================================================
    6. SEÇÕES INTERNAS (DASHBOARD, CALENDÁRIO, CARTEIRA, BUSCA)
    ========================================================================== */
@@ -454,6 +464,11 @@ body .btn-search {
     gap: 1rem;
 }
 
+/* Espaçamento acima da lista de lembretes para ficar alinhado com o título */
+.reminder-items {
+    margin-top: 0.75rem;
+}
+
 .reminder-card {
     display: flex;
     align-items: flex-start;
@@ -484,6 +499,11 @@ body .btn-search {
 
 .reminder-card-content {
     flex: 1;
+}
+
+/* Permite que o conteúdo dentro do card encolha corretamente em telas pequenas */
+.reminder-card-content {
+    min-width: 0;
 }
 
 .reminder-card-title {
@@ -720,6 +740,9 @@ body .bottom-nav {
     padding: 0.3125rem 0;
     z-index: 50;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
+
+    /* Restringe gestos horizontais na barra inferior para evitar pans laterais acidentais */
+    touch-action: pan-y;
 }
 
 body .nav-item {
