@@ -100,8 +100,11 @@
             <button class="sidebar-item" id="menu-enviar-feedback">
                 <span class="icon">☁️</span> Enviar Feedback / Dúvida
             </button>
-            <button class="sidebar-item" id="menu-painel-principal">
-                <span class="icon">📊</span> Painel Principal
+            <button class="sidebar-item" id="menu-suporte-whatsapp">
+                <span class="icon">💬</span> Suporte via WhatsApp
+            </button>
+            <button class="sidebar-item" id="menu-informacoes-uteis">
+                <span class="icon">ℹ️</span> Informações Úteis
             </button>
             <button class="sidebar-item" id="menu-obter-ajuda">
                 <span class="icon">❓</span> Obter ajuda
@@ -119,13 +122,13 @@
     <div id="modal-feedback" class="modal hidden">
         <div class="modal-content card">
             <h3>✉️ Enviar Dúvida ou Feedback</h3>
-            <p>Sua mensagem será salva diretamente na nuvem do sistema.</p>
+            <p>Digite sua mensagem e envie via WhatsApp:</p>
             <form id="form-feedback">
                 <textarea id="txt-feedback" placeholder="Digite aqui sua dúvida, crítica ou sugestão..." rows="5"
                     required></textarea>
                 <div class="modal-actions">
                     <button type="button" id="btn-cancelar-feedback" class="btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn-success">Enviar para a Nuvem</button>
+                    <button type="button" id="btn-whatsapp-feedback" class="btn-primary">💬 Enviar via WhatsApp</button>
                 </div>
             </form>
         </div>
@@ -281,6 +284,7 @@
                             <option value="principal">Minha Carteira (Titular)</option>
                         </select>
                         <button id="btn-add-dependente" class="btn-success btn-search" type="button">+</button>
+                        <button id="btn-remove-dependente" class="btn-danger btn-search" type="button" style="background-color: var(--danger); display: none;">🗑️</button>
                     </div>
                 </div>
 
@@ -316,12 +320,111 @@
                 <!-- Listagem do Histórico e Botão de PDF -->
                 <h3>Histórico Oficial</h3>
                 <div id="wallet-list" class="list-container"></div>
-                <button id="btn-exportar-pdf" class="btn-primary" style="margin-top: 1rem;">🖨️ Exportar Histórico
-                    Oficial (PDF)</button>
+            </section>
+
+            <!-- 5. INFORMAÇÕES ÚTEIS & TELEFONES DE EMERGÊNCIA -->
+            <section id="screen-useful-info" class="sub-screen hidden">
+                <!-- Seção de Telefones de Emergência -->
+                <div class="card emergency-card">
+                    <h3>🚨 Telefones de Emergência</h3>
+                    <div class="info-item">
+                        <span class="label">SAMU</span>
+                        <span class="value">📞 192</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Disque Saúde (SUS)</span>
+                        <span class="value">📞 136</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Polícia</span>
+                        <span class="value">📞 190</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Bombeiros</span>
+                        <span class="value">📞 193</span>
+                    </div>
+                </div>
+
+                <!-- Seção de Informações Gerais do SUS -->
+                <div class="card sus-info-card">
+                    <h3>🏥 Informações do SUS</h3>
+                    <div class="accordion-card" data-target="sus-info-calendarios">
+                        <div class="accordion-header">
+                            <h4>📅 Calendário de Vacinação Oficial</h4>
+                            <span class="accordion-arrow">▼</span>
+                        </div>
+                        <div id="sus-info-calendarios" class="accordion-content hidden">
+                            <p><strong>Crianças:</strong> Vacinação desde o nascimento até 5 anos completos.</p>
+                            <p><strong>Adolescentes:</strong> Atualização de vacinas até 19 anos.</p>
+                            <p><strong>Adultos:</strong> Reforços conforme protocolos SUS.</p>
+                            <p><strong>Idosos:</strong> Vacinas específicas para 60+ anos.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-card" data-target="sus-info-orientacoes">
+                        <div class="accordion-header">
+                            <h4>📋 Orientações Importantes</h4>
+                            <span class="accordion-arrow">▼</span>
+                        </div>
+                        <div id="sus-info-orientacoes" class="accordion-content hidden">
+                            <p>• <strong>Leve a carteira:</strong> Apresente a carteira de vacinação em cada vacinação.</p>
+                            <p>• <strong>Sem jejum:</strong> Não é necessário jejum para tomar qualquer vacina.</p>
+                            <p>• <strong>Repouso:</strong> Evite atividades extenuantes nos 2 dias após vacinação.</p>
+                            <p>• <strong>Efeitos esperados:</strong> Dor leve no local, febre baixa e irritabilidade são normais.</p>
+                            <p>• <strong>Contraindicações:</strong> Comunique ao enfermeiro sobre alergias e medicamentos em uso.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-card" data-target="sus-info-direitos">
+                        <div class="accordion-header">
+                            <h4>⚖️ Seus Direitos no SUS</h4>
+                            <span class="accordion-arrow">▼</span>
+                        </div>
+                        <div id="sus-info-direitos" class="accordion-content hidden">
+                            <p>• Acesso universal e gratuito a todas as vacinas.</p>
+                            <p>• Atendimento respeitoso e humanizado.</p>
+                            <p>• Carteira de vacinação sem custo.</p>
+                            <p>• Informações claras sobre cada vacina.</p>
+                            <p>• Reclamações podem ser feitas ao órgão de saúde local.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-card" data-target="sus-info-apps">
+                        <div class="accordion-header">
+                            <h4>📱 Aplicativos e Portais do SUS</h4>
+                            <span class="accordion-arrow">▼</span>
+                        </div>
+                        <div id="sus-info-apps" class="accordion-content hidden">
+                            <p><strong>ConnectSUS:</strong> Visualize seu histórico de vacinação oficial no Sistema Único de Saúde.</p>
+                            <p><strong>Meu SUS Digital:</strong> Acesse serviços e agendamentos de saúde.</p>
+                            <p><strong>Saúde Brasil:</strong> Informações epidemiológicas e alertas de saúde pública.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Dicas de Saúde -->
+                <div class="card tips-card">
+                    <h3>💡 Dicas de Prevenção</h3>
+                    <div class="tip-item">
+                        <p>🧼 <strong>Higiene das mãos:</strong> Lave com frequência para evitar doenças transmissíveis.</p>
+                    </div>
+                    <div class="tip-item">
+                        <p>😷 <strong>Máscaras:</strong> Use em locais com aglomeração ou se estiver resfriado.</p>
+                    </div>
+                    <div class="tip-item">
+                        <p>💉 <strong>Mantenha carteira atualizada:</strong> Vacinas protegem você e a comunidade.</p>
+                    </div>
+                    <div class="tip-item">
+                        <p>🏃 <strong>Atividade física:</strong> Exercício regular fortalece a imunidade.</p>
+                    </div>
+                    <div class="tip-item">
+                        <p>🥗 <strong>Alimentação saudável:</strong> Frutas, vegetais e proteína fortalecem o sistema imunológico.</p>
+                    </div>
+                </div>
 
             </section>
 
-            <!-- 5. LEMBRETES & NOTIFICAÇÕES -->
+            <!-- 6. LEMBRETES & NOTIFICAÇÕES -->
             <section id="screen-reminders" class="sub-screen hidden">
                 <div class="card search-card">
                     <h3>📍 Encontrar Posto de Vacinação</h3>

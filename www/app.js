@@ -66,6 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('app_theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
         });
     });
+
+    // Inicializa accordions genericamente para qualquer seção
+    inicializarAccordions();
 });
 
 // 3. GERENCIADOR GLOBAL DE ABAS (INTERACTION MANAGER):
@@ -75,7 +78,44 @@ window.mudarAba = function(targetId, elementoBotao) {
     if (targetId === 'calendar') filtrarCalendario('criança');
     if (targetId === 'wallet') renderizarCarteira();
     if (targetId === 'reminders') renderizarLembretes();
+    if (targetId === 'useful-info') inicializarAccordions();
 };
+
+// Inicializa accordions genericamente para qualquer seção que tenha a classe accordion-card
+function inicializarAccordions() {
+    document.querySelectorAll('.accordion-card').forEach(card => {
+        // Remove o listener anterior para evitar duplicatas
+        const novoCard = card.cloneNode(true);
+        card.parentNode?.replaceChild(novoCard, card);
+
+        novoCard.addEventListener('click', () => {
+            const targetId = novoCard.getAttribute('data-target');
+            const conteudo = document.getElementById(targetId);
+
+            if (conteudo) {
+                const estaEscondido = conteudo.classList.contains('hidden');
+                
+                // Fecha todos os outros blocos primeiro (apenas dentro da mesma seção pai)
+                const seccaoPai = novoCard.closest('.sub-screen');
+                if (seccaoPai) {
+                    seccaoPai.querySelectorAll('.accordion-content').forEach(c => {
+                        c.classList.add('hidden');
+                    });
+                    
+                    seccaoPai.querySelectorAll('.accordion-card').forEach(box => {
+                        box.classList.remove('open');
+                    });
+                }
+
+                // Se estava fechado, abre apenas o clicado
+                if (estaEscondido) {
+                    conteudo.classList.remove('hidden');
+                    novoCard.classList.add('open');
+                }
+            }
+        });
+    });
+}
 
 // Vincula as funções necessárias aos escopos de botões do HTML
 window.filtrarCalendario = filtrarCalendario;

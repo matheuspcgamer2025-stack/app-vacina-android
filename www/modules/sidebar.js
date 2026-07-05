@@ -1,4 +1,5 @@
 import { appState } from './database.js';
+import { WHATSAPP_CONFIG } from './config.js';
 
 export function inicializarSidebar() {
     const sidebar = document.getElementById('app-sidebar');
@@ -23,14 +24,14 @@ export function inicializarSidebar() {
         sidebar.classList.add('hidden');
     });
 
-    // 2. FUNCIONALIDADE: BOTÃO PAINEL PRINCIPAL (DIRECIONAMENTO)
-    document.getElementById('menu-painel-principal')?.addEventListener('click', () => {
+    // 2. FUNCIONALIDADE: BOTÃO INFORMAÇÕES ÚTEIS (DIRECIONAR PARA NOVA ABA)
+    document.getElementById('menu-informacoes-uteis')?.addEventListener('click', () => {
         sidebar.classList.add('hidden'); // Fecha a barra lateral
         
         // Simula o clique na primeira aba da barra de navegação inferior (Painel)
-        const botaoAbaPainel = document.querySelector(".bottom-nav .nav-item");
-        if (window.mudarAba && botaoAbaPainel) {
-            window.mudarAba('dashboard', botaoAbaPainel);
+        // na verdade, vamos direcionar para a nova aba de informações úteis
+        if (window.mudarAba) {
+            window.mudarAba('useful-info', document.getElementById('menu-informacoes-uteis'));
         }
     });
 
@@ -65,13 +66,22 @@ export function inicializarSidebar() {
         formFeedback?.reset();
     });
 
-    formFeedback?.addEventListener('submit', (e) => {
-        e.preventDefault();
+    // 5.1. BOTÃO DE WHATSAPP NO MODAL DE FEEDBACK
+    document.getElementById('btn-whatsapp-feedback')?.addEventListener('click', () => {
         const texto = document.getElementById('txt-feedback').value.trim();
-        
-        alert(`🎉 Feedback enviado com sucesso de forma local!\n\nMensagem: "${texto}"`);
-        modalFeedback?.classList.add('hidden');
-        formFeedback?.reset();
+        if (texto) {
+            abrirWhatsApp(texto);
+            modalFeedback?.classList.add('hidden');
+            formFeedback?.reset();
+        } else {
+            alert('⚠️ Digite sua mensagem antes de enviar pelo WhatsApp!');
+        }
+    });
+
+    // 5.2. FUNCIONALIDADE: SUPORTE VIA WHATSAPP (BOTÃO DO SIDEBAR)
+    document.getElementById('menu-suporte-whatsapp')?.addEventListener('click', () => {
+        sidebar.classList.add('hidden');
+        abrirWhatsApp('Olá, preciso de suporte com o VacinaApp!');
     });
 
     // 6. FUNCIONALIDADE: SAIR DA CONTA (LOGOUT)
@@ -80,4 +90,19 @@ export function inicializarSidebar() {
             location.reload(); // Recarrega o aplicativo limpando o estado de login
         }
     });
+}
+
+/**
+ * Função para abrir o WhatsApp com mensagem pré-preenchida
+ * @param {string} mensagem - Mensagem a ser enviada
+ */
+function abrirWhatsApp(mensagem) {
+    // Codifica a mensagem para URL
+    const mensagemCodificada = encodeURIComponent(mensagem);
+    
+    // URL da API do WhatsApp
+    const urlWhatsApp = `https://wa.me/${WHATSAPP_CONFIG.SUPPORT_NUMBER}?text=${mensagemCodificada}`;
+    
+    // Abre em uma nova aba/janela
+    window.open(urlWhatsApp, '_blank');
 }
