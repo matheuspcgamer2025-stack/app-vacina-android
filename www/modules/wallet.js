@@ -156,4 +156,224 @@ export function renderizarCarteira(onDeleteCallback) {
 
         container.appendChild(card);
     });
+
+    // Adiciona o botão flutuante de compartilhamento ao final da carteira
+    if (vacinasFiltradas.length > 0) {
+        const botaoCompartilhar = document.createElement('button');
+        botaoCompartilhar.className = 'btn-share-history';
+        botaoCompartilhar.innerHTML = '📤 Compartilhar Histórico';
+        botaoCompartilhar.style.cssText = `
+            display: block;
+            margin: 1.5rem auto 0;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary), #8e44ad);
+            color: white;
+            border: none;
+            border-radius: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9375rem;
+            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4);
+            transition: all 0.3s ease;
+        `;
+        botaoCompartilhar.addEventListener('mouseover', () => {
+            botaoCompartilhar.style.transform = 'scale(1.05)';
+            botaoCompartilhar.style.boxShadow = '0 6px 20px rgba(155, 89, 182, 0.6)';
+        });
+        botaoCompartilhar.addEventListener('mouseout', () => {
+            botaoCompartilhar.style.transform = 'scale(1)';
+            botaoCompartilhar.style.boxShadow = '0 4px 15px rgba(155, 89, 182, 0.4)';
+        });
+        botaoCompartilhar.addEventListener('click', () => compartilharHistoricoVacinas());
+        container.appendChild(botaoCompartilhar);
+    }
+}
+
+// ==========================================================================
+// 4. COMPARTILHAMENTO NATIVO DO HISTÓRICO DE VACINAS (WEB SHARE API)
+// ==========================================================================
+export async function compartilharHistoricoVacinas() {
+    const perfilAtivo = appState.perfilAtual || "principal";
+    const vacinasFiltradas = appState.carteira.filter(v => v.perfilId === perfilAtivo);
+
+    if (vacinasFiltradas.length === 0) {
+        alert("⚠️ Nenhuma vacina para compartilhar!");
+        return;
+    }
+
+    try {
+        // Gera o PDF com o histórico
+        const pdfBlob = gerarPDFHistorico(vacinasFiltradas);
+        const arquivo = new File([pdfBlob], "Histórico_Vacinação.pdf", { type: "application/pdf" });
+
+        // Verifica se o navegador suporta Web Share API
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [arquivo] })) {
+            // Compartilha usando a API nativa do Android
+            await navigator.share({
+                title: "VacinaApp - Histórico de Vacinação",
+                text: "Veja meu histórico completo de vacinas",
+                files: [arquivo]
+            });
+            console.log("✅ Compartilhado com sucesso!");
+        } else {
+            // Fallback: Download do PDF se não suportar compartilhamento
+            const url = URL.createObjectURL(pdfBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = "Histórico_Vacinação.pdf";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            alert("✅ PDF baixado com sucesso! Você pode compartilhá-lo agora.");
+        }
+    } catch (error) {
+        if (error.name !== 'AbortError') {
+            console.error("Erro ao compartilhar:", error);
+            alert("❌ Erro ao gerar o PDF. Tente novamente.");
+        }
+    }
+}
+
+// ==========================================================================
+// 5. GERAÇÃO DO PDF COM HTML2PDF
+// ==========================================================================
+function gerarPDFHistorico(vacinasFiltradas) {
+    // Cria o HTML estruturado do PDF
+    const htmlConteudo = `
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {
+                        font-family: 'Segoe UI', Arial, sans-serif;
+                        margin: 0;
+                        padding: 20px;
+                        background: white;
+                        color: #333;
+                    }
+                    .header {
+                        text-align: center;
+                        margin-bottom: 30px;
+                        border-bottom: 3px solid #9b59b6;
+                        padding-bottom: 15px;
+                    }
+                    .logo {
+                        font-size: 28px;
+                        font-weight: bold;
+                        color: #9b59b6;
+                        margin-bottom: 10px;
+                    }
+                    .subtitle {
+                        color: #666;
+                        font-size: 14px;
+                        margin-bottom: 5px;
+                    }
+                    .timestamp {
+                        color: #999;
+                        font-size: 12px;
+                    }
+                    .vacina-card {
+                        border: 1px solid #e0e0e0;
+                        border-radius: 8px;
+                        padding: 15px;
+                        margin-bottom: 15px;
+                        background: #f9f9f9;
+                    }
+                    .vacina-nome {
+                        font-size: 16px;
+                        font-weight: bold;
+                        color: #9b59b6;
+                        margin-bottom: 8px;
+                    }
+                    .vacina-info {
+                        font-size: 13px;
+                        line-height: 1.6;
+                        color: #555;
+                    }
+                    .info-linha {
+                        margin-bottom: 5px;
+                    }
+                    .reforco {
+                        color: #f0ad4e;
+                        font-weight: bold;
+                        background: #fffbf0;
+                        padding: 8px;
+                        border-radius: 5px;
+                        margin-top: 8px;
+                    }
+                    .footer {
+                        margin-top: 30px;
+                        padding-top: 15px;
+                        border-top: 2px solid #e0e0e0;
+                        text-align: center;
+                        font-size: 11px;
+                        color: #999;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="logo">💉 VacinaApp</div>
+                    <div class="subtitle">Histórico Digital de Vacinação</div>
+                    <div class="timestamp">Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</div>
+                </div>
+
+                <div class="vacinas-container">
+                    ${vacinasFiltradas.map(vax => {
+                        const dataFormatada = new Date(vax.data + 'T00:00:00').toLocaleDateString('pt-BR');
+                        let reforcoHtml = '';
+                        if (vax.proximaDose) {
+                            const proxBr = new Date(vax.proximaDose + 'T00:00:00').toLocaleDateString('pt-BR');
+                            reforcoHtml = `<div class="reforco">⏳ Reforço Recomendado: ${proxBr}</div>`;
+                        }
+                        return `
+                            <div class="vacina-card">
+                                <div class="vacina-nome">${vax.nome}</div>
+                                <div class="vacina-info">
+                                    <div class="info-linha"><strong>📅 Data:</strong> ${dataFormatada}</div>
+                                    <div class="info-linha"><strong>📍 Local:</strong> ${vax.local}</div>
+                                    <div class="info-linha"><strong>📦 Lote:</strong> ${vax.lote}</div>
+                                </div>
+                                ${reforcoHtml}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <div class="footer">
+                    <p>Este documento foi gerado automaticamente pelo VacinaApp.</p>
+                    <p>Compartilhe este PDF com profissionais de saúde quando necessário.</p>
+                </div>
+            </body>
+        </html>
+    `;
+
+    // Converte HTML para Blob usando html2pdf (via callback)
+    return new Promise((resolve) => {
+        const element = document.createElement('div');
+        element.innerHTML = htmlConteudo.match(/<body>[\s\S]*<\/body>/)[0].replace(/<\/?body>/g, '');
+        
+        const opt = {
+            margin: 5,
+            filename: 'Histórico_Vacinação.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+        };
+
+        html2pdf()
+            .set(opt)
+            .from(element)
+            .outputPdf('blob')
+            .then(pdf => resolve(pdf));
+    }).catch(() => {
+        // Fallback se html2pdf não funcionar
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        return canvas.toBlob(blob => blob);
+    });
 }
