@@ -21,6 +21,8 @@ function descartarLembrete(nome) {
 
 export function renderizarLembretes() {
     const list = document.getElementById('reminders-list');
+    if (!list) return; // Proteção contra erro de elemento não encontrado
+    
     list.innerHTML = "";
     
     const nomesJaTomados = appState.carteira.map(v => v.nome.toLowerCase());
@@ -50,6 +52,7 @@ export function renderizarLembretes() {
         const icon = document.createElement('div');
         icon.className = 'reminder-card-icon';
         icon.textContent = '🔔';
+        icon.setAttribute('aria-hidden', 'true');
 
         const content = document.createElement('div');
         content.className = 'reminder-card-content';
@@ -61,14 +64,24 @@ export function renderizarLembretes() {
         const badge = document.createElement('span');
         badge.className = 'reminder-card-badge';
         badge.textContent = 'Lembrete';
+        badge.setAttribute('aria-label', 'Vacina agendada para ser lembrada');
 
         const actions = document.createElement('div');
         actions.className = 'reminder-card-actions';
+        
         const remover = document.createElement('button');
         remover.className = 'btn-remover-lembrete';
         remover.type = 'button';
         remover.textContent = 'Remover';
-        remover.addEventListener('click', () => descartarLembrete(p.nome));
+        remover.setAttribute('aria-label', `Remover lembrete de ${p.nome}`);
+        
+        // Usar bind para garantir que o contexto 'this' está correto
+        remover.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            descartarLembrete(p.nome);
+        }, { once: false, passive: false });
+        
         actions.appendChild(remover);
 
         li.appendChild(icon);
