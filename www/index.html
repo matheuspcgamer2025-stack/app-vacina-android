@@ -47,9 +47,24 @@
                 </div>
                 <div class="form-group">
                     <label for="login-senha">Senha</label>
-                    <input type="password" id="login-senha" placeholder="Digite sua senha" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="login-senha" class="password-input" placeholder="Digite sua senha" required>
+                        <button type="button" class="btn-password-toggle" data-target="login-senha" aria-label="Mostrar senha">
+                            <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" class="btn-primary">Entrar com Segurança</button>
+
+                <div style="height:0.5rem"></div>
+
+                <button type="button" id="btn-google-signin" class="btn-google" aria-label="Entrar com o Google">
+                    <span class="google-icon" aria-hidden="true">G</span>
+                    Entrar com o Google
+                </button>
             </form>
             <p class="switch-text">Não tem conta? <a href="#" id="link-cadastro">Cadastre-se aqui</a></p>
         </div>
@@ -71,11 +86,27 @@
                 </div>
                 <div class="form-group">
                     <label for="register-senha">Criar Senha</label>
-                    <input type="password" id="register-senha" placeholder="Crie uma senha forte" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="register-senha" class="password-input" placeholder="Crie uma senha forte" required>
+                        <button type="button" class="btn-password-toggle" data-target="register-senha" aria-label="Mostrar senha">
+                            <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="register-confirmar-senha">Confirmar Senha</label>
-                    <input type="password" id="register-confirmar-senha" placeholder="Repita a senha criada" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="register-confirmar-senha" class="password-input" placeholder="Repita a senha criada" required>
+                        <button type="button" class="btn-password-toggle" data-target="register-confirmar-senha" aria-label="Mostrar senha">
+                            <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
                     <small class="password-requirements">
                         🔒 Requisitos da Senha: Mínimo 8 caracteres, contendo pelo menos uma letra maiúscula, uma
                         minúscula e um número.

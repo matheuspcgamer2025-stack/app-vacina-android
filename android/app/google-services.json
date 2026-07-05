@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "317556925550",
+    "project_id": "vacinaapp-2cca0",
+    "storage_bucket": "vacinaapp-2cca0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:317556925550:android:d184fd59796548eddcf27f",
+        "android_client_info": {
+          "package_name": "com.seuusuario.vacinaapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "317556925550-3na9dfi63d1rop78fl82bp3jjcaah5g9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.seuusuario.vacinaapp",
+            "certificate_hash": "21977187dd48f98509ef53280c6ed01affe53726"
+          }
+        },
+        {
+          "client_id": "317556925550-6433bl2adqnlg6t4li83mptcrcc3ec9v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBYx1ViIj9VCiTupjElHC0BylaATqUtIM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "317556925550-6433bl2adqnlg6t4li83mptcrcc3ec9v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

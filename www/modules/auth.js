@@ -2,7 +2,9 @@ import { appState, auth } from './database.js';
 // IMPORTAÇÃO OFICIAL DO FIREBASE COM O CAMINHO COMPLETO DO SCRIPT
 import { 
     createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword 
+    signInWithEmailAndPassword,
+    GoogleAuthProvider,
+    signInWithPopup
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -101,6 +103,26 @@ export function inicializarAutentication(onLoginSuccess) {
             } else {
                 alert("❌ Falha ao criar conta no servidor. Tente novamente.");
             }
+        }
+    });
+
+    // ================================
+    // LOGIN COM GOOGLE (Firebase)
+    // ================================
+    const btnGoogle = document.getElementById('btn-google-signin');
+    btnGoogle?.addEventListener('click', async function(e) {
+        e.preventDefault();
+        const provider = new GoogleAuthProvider();
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+            appState.usuarioLogado = user.email || user.displayName || user.uid;
+            screenLogin.classList.add('hidden');
+            appMain.classList.remove('hidden');
+            onLoginSuccess();
+        } catch (err) {
+            console.error('Erro no login com Google:', err);
+            alert('❌ Falha ao entrar com o Google.');
         }
     });
 }

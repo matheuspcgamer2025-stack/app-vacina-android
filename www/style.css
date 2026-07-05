@@ -209,6 +209,99 @@ button, .btn-primary, .btn-success, .btn-secondary {
 .btn-secondary { background: #777777; }
 .btn-danger { background: var(--danger); }
 
+/* Botão moderno de login com Google */
+.btn-google {
+    width: 100%;
+    background: linear-gradient(90deg, #ffffff 0%, #ffffff 100%);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 0.625rem;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(16,24,40,0.06);
+}
+
+.btn-google .google-icon {
+    display: inline-flex;
+    width: 1.4rem;
+    height: 1.4rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    font-weight: 800;
+    color: #dd4b39;
+}
+
+body.dark-theme .btn-google {
+    background: linear-gradient(90deg, #1a1a1d 0%, #1a1a1d 100%);
+    color: white;
+    border-color: rgba(255,255,255,0.06);
+}
+
+/* Toggle visualizar senha */
+.password-wrapper { 
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 0;
+}
+
+.password-wrapper .password-input { 
+    padding-right: 2.75rem;
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.btn-password-toggle {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    margin: 0;
+    transition: color 0.2s ease;
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.btn-password-toggle:hover {
+    color: var(--primary);
+}
+
+.btn-password-toggle:focus {
+    outline: none;
+}
+
+.btn-password-toggle:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.btn-password-toggle[aria-pressed="true"] {
+    color: var(--primary);
+}
+
+.icon-eye {
+    width: 1.2rem;
+    height: 1.2rem;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    display: block;
+}
+
 /* Efeitos Globais de Interação nos Botões Comun (Hover e Active) */
 button:hover, .btn-primary:hover, .btn-success:hover, .btn-secondary:hover, .btn-danger:hover { 
     filter: brightness(1.15); 
