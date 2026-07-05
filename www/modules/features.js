@@ -7,6 +7,7 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
     // ==========================================
     const selectDep = document.getElementById('select-dependente');
     const btnAddDep = document.getElementById('btn-add-dependente');
+    const btnRemoveDep = document.getElementById('btn-remove-dependente');
 
     // Carrega dependentes já salvos no dispositivo
     const dependentesSalvos = JSON.parse(localStorage.getItem('app_dependentes')) || [];
@@ -16,6 +17,14 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
         opt.innerText = `👶 ${dep.nome}`;
         selectDep?.appendChild(opt);
     });
+
+    // Função auxiliar para atualizar visibilidade do botão remover
+    function atualizarBotaoRemover() {
+        const valorSelecionado = selectDep?.value;
+        if (btnRemoveDep) {
+            btnRemoveDep.style.display = valorSelecionado === 'principal' ? 'none' : 'block';
+        }
+    }
 
     btnAddDep?.addEventListener('click', () => {
         const nomeDep = prompt("Digite o nome do dependente (Filho, Cônjuge ou Idoso):");
@@ -33,54 +42,51 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
         
         // Altera a visão para o novo perfil
         appState.perfilAtual = novoDep.id;
+        atualizarBotaoRemover();
         onUpdateCallback();
+    });
+
+    btnRemoveDep?.addEventListener('click', () => {
+        const idSelecionado = selectDep?.value;
+        if (!idSelecionado || idSelecionado === 'principal') {
+            alert("❌ Você não pode remover o perfil titular!");
+            return;
+        }
+
+        const nomeDependente = dependentesSalvos.find(d => d.id === idSelecionado)?.nome;
+        if (!confirm(`Deseja realmente remover o perfil de "${nomeDependente}"? Todas as vacinas associadas também serão apagadas.`)) {
+            return;
+        }
+
+        // Remove do array de dependentes
+        const indice = dependentesSalvos.findIndex(d => d.id === idSelecionado);
+        if (indice !== -1) {
+            dependentesSalvos.splice(indice, 1);
+            localStorage.setItem('app_dependentes', JSON.stringify(dependentesSalvos));
+
+            // Remove a opção do select
+            const opcao = selectDep?.querySelector(`option[value="${idSelecionado}"]`);
+            if (opcao) opcao.remove();
+
+            // Volta para o perfil principal
+            selectDep.value = 'principal';
+            appState.perfilAtual = 'principal';
+
+            alert(`✅ Perfil de "${nomeDependente}" removido com sucesso!`);
+            atualizarBotaoRemover();
+            onUpdateCallback();
+        }
     });
 
     selectDep?.addEventListener('change', (e) => {
         appState.perfilAtual = e.target.value;
+        atualizarBotaoRemover();
         onUpdateCallback();
     });
 
-    // ==========================================
-    // 2. EXPORTAÇÃO EM PDF (NATIVA E PROFISSIONAL)
-    // ==========================================
-    document.getElementById('btn-exportar-pdf')?.addEventListener('click', () => {
-        const listaHtml = document.getElementById('wallet-list').innerHTML;
-        const nomePerfil = selectDep.options[selectDep.selectedIndex].text;
+    // Inicializa o estado do botão remover
+    atualizarBotaoRemover();
 
-        // Cria uma janela oculta otimizada apenas com os dados estruturados para a impressão limpa
-        const janelaImpressao = window.open('', '', 'width=800,height=600');
-        janelaImpressao.document.write(`
-            <html>
-            <head>
-                <title>Carteira Digital de Vacinação</title>
-                <style>
-                    body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
-                    .header { text-align: center; border-bottom: 3px solid #0275d8; padding-bottom: 20px; margin-bottom: 30px; }
-                    .vax-item { background: #f8f9fa; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #5cb85c; page-break-inside: avoid; }
-                    h4 { margin: 0 0 5px 0; color: #0275d8; font-size: 18px; }
-                    p { margin: 3px 0; font-size: 14px; }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h2>🛡️ VacinaApp - Histórico de Imunização</h2>
-                    <p><strong>Carteira:</strong> ${nomePerfil}</p>
-                    <p>Documento gerado em: ${new Date().toLocaleDateString('pt-BR')}</p>
-                </div>
-                ${listaHtml}
-            </body>
-            </html>
-        `);
-        janelaImpressao.document.close();
-        janelaImpressao.focus();
-        
-        // Dispara a caixa nativa de Salvar como PDF do Android/PC
-        setTimeout(() => {
-            janelaImpressao.print();
-            janelaImpressao.close();
-        }, 500);
-    });
 }
 
 // ==========================================

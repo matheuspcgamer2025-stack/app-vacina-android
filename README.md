@@ -120,6 +120,20 @@ const firebaseConfig = {
 };
 ```
 
+#### Coleção `postos`
+
+Para a busca de postos de vacinação, o app agora puxa dados diretamente do Firestore na coleção `postos`. Cada documento deve conter campos como:
+
+- `nome` (ex: "UBS Centro")
+- `endereco` (ex: "Rua Major Facundo, 500")
+- `bairro` (ex: "Centro")
+- `cep` (ex: "60000-000")
+- `telefone` (ex: "(85) 3251-1000")
+- `funcionamento` (ex: "07:00 às 17:00")
+- `vacinas` (ex: "BCG, Influenza, Tríplice Viral")
+
+Se o Firestore não estiver disponível, o app usa um pequeno fallback local de estações de saúde para manter a busca funcional.
+
 ### 2. Capacitor Plugins
 
 Plugins já configurados:

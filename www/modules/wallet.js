@@ -203,8 +203,8 @@ export async function compartilharHistoricoVacinas() {
 
     try {
         // Gera o PDF com o histórico
-        const pdfBlob = gerarPDFHistorico(vacinasFiltradas);
-        const arquivo = new File([pdfBlob], "Histórico_Vacinação.pdf", { type: "application/pdf" });
+        const pdfBlob = await gerarPDFHistorico(vacinasFiltradas);
+        const arquivo = new File([pdfBlob], "Historico_Vacinacao.pdf", { type: "application/pdf" });
 
         // Verifica se o navegador suporta Web Share API
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [arquivo] })) {
@@ -220,7 +220,7 @@ export async function compartilharHistoricoVacinas() {
             const url = URL.createObjectURL(pdfBlob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = "Histórico_Vacinação.pdf";
+            link.download = "Historico_Vacinacao.pdf";
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
