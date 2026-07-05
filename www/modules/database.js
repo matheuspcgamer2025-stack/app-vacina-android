@@ -1,9 +1,9 @@
 /* ==========================================================================
    CONFIGURAÇÃO OFICIAL DO BACKEND (FIREBASE CLOUD - REVISADO)
    ========================================================================== */
-import { initializeApp } from "https://gstatic.com";
-import { getFirestore } from "https://gstatic.com";
-import { getAuth } from "https://gstatic.com";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
 // Suas chaves oficiais do console ajustadas e sem cortes de texto
 const firebaseConfig = {

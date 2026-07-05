@@ -9,7 +9,23 @@ import { configurarFormularioCarteira, renderizarCarteira } from './modules/wall
 import { renderizarLembretes, configurarNotificacoes } from './modules/reminders.js';
 import { buscarEExibirPosto } from './modules/gps.js';
 
-// 2. LOGICAS DE INICIALIZAÇÃO E CICLO DE VIDA DO APP:
+// 2. MECANISMO DE SAÍDA GARANTIDA DA TELA DE ABERTURA (ZÉ GOTINHA)
+window.addEventListener('load', () => {
+    const sumirSplash = () => {
+        const splash = document.getElementById('app-splash');
+        if (splash) {
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.remove(); // Destrói o elemento para liberar memória do Android
+            }, 500);
+        }
+    };
+
+    // Força a tela a sumir após 2.5 segundos de qualquer forma para liberar o Login
+    setTimeout(sumirSplash, 2500);
+});
+
+// 3. LOGICAS DE INICIALIZAÇÃO E CICLO DE VIDA DO APP:
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializa os seletores de dependentes e recarrega a aba ao mudar de perfil
     inicializarNovasFuncoes(() => {

@@ -1,4 +1,4 @@
-import { appState, salvarCarteiraNoDispositivo } from './database.js';
+import { appState } from './database.js';
 
 export function inicializarNovasFuncoes(onUpdateCallback) {
     

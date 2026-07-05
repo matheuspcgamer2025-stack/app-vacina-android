@@ -1,6 +1,6 @@
 import { db, appState } from './database.js';
 import { calcularIntervaloDose } from './features.js';
-// Importações oficiais das ferramentas de nuvem do Firestore
+// CORREÇÃO DA IMPORTAÇÃO: Usando a URL completa oficial da Google sem cortes
 import { 
     collection, 
     addDoc, 
@@ -9,7 +9,8 @@ import {
     where, 
     deleteDoc, 
     doc 
-} from "https://gstatic.com";
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
 
 // ==========================================================================
 // 1. CONFIGURAÇÃO E ENVIO DE REGISTROS PARA A NUVEM

@@ -1,9 +1,9 @@
 import { appState, auth } from './database.js';
-// Importação dos métodos oficiais de login e cadastro da Google
+// IMPORTAÇÃO OFICIAL DO FIREBASE COM O CAMINHO COMPLETO DO SCRIPT
 import { 
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword 
-} from "https://gstatic.com";
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REGEX_CPF = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
@@ -54,14 +54,11 @@ export function inicializarAutentication(onLoginSuccess) {
             return;
         }
 
-        // Se o usuário digitou um CPF, adiciona um sufixo para o Firebase aceitar como e-mail técnico
         const emailFirebase = validacao.tipo === 'cpf' ? `${id.replace(/\D/g, '')}@vacinaapp.local` : id;
 
         try {
-            // Executa a validação direto nos servidores da Google
             const userCredential = await signInWithEmailAndPassword(auth, emailFirebase, senha);
-            
-            appState.usuarioLogado = id; // Guarda o identificador original digitado
+            appState.usuarioLogado = id;
             
             screenLogin.classList.add('hidden');
             appMain.classList.remove('hidden');
@@ -87,13 +84,10 @@ export function inicializarAutentication(onLoginSuccess) {
             return;
         }
 
-        // Converte CPF para formato compatível de e-mail se necessário
         const emailFirebase = validacao.tipo === 'cpf' ? `${id.replace(/\D/g, '')}@vacinaapp.local` : id;
 
         try {
-            // Cria a conta de forma definitiva na nuvem do Firebase
             const userCredential = await createUserWithEmailAndPassword(auth, emailFirebase, senha);
-            
             alert("🎉 Conta criada com sucesso com segurança na nuvem!");
             appState.usuarioLogado = id;
             
@@ -102,7 +96,7 @@ export function inicializarAutentication(onLoginSuccess) {
             onLoginSuccess();
         } catch (error) {
             console.error("Erro no cadastro:", error);
-            if (error.code === 'auth/email-already-in-matter' || error.code === 'auth/email-already-in-use') {
+            if (error.code === 'auth/email-already-in-use') {
                 alert("❌ Este CPF ou E-mail já está cadastrado no sistema!");
             } else {
                 alert("❌ Falha ao criar conta no servidor. Tente novamente.");
