@@ -1,3 +1,4 @@
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { appState, auth } from './database.js';
 // IMPORTAÇÃO OFICIAL DO FIREBASE COM O CAMINHO COMPLETO DO SCRIPT
 import { 
@@ -106,23 +107,38 @@ export function inicializarAutentication(onLoginSuccess) {
         }
     });
 
-    // ================================
-    // LOGIN COM GOOGLE (Firebase)
-    // ================================
-    const btnGoogle = document.getElementById('btn-google-signin');
-    btnGoogle?.addEventListener('click', async function(e) {
-        e.preventDefault();
-        const provider = new GoogleAuthProvider();
+       // ==========================================
+    // AUTENTICAÇÃO NATIVA COM O GOOGLE SIGN-IN (BLINDADA)
+    // ==========================================
+    document.getElementById('btn-google-signin')?.addEventListener('click', async () => {
         try {
-            const result = await signInWithPopup(auth, provider);
-            const user = result.user;
-            appState.usuarioLogado = user.email || user.displayName || user.uid;
-            screenLogin.classList.add('hidden');
-            appMain.classList.remove('hidden');
-            onLoginSuccess();
-        } catch (err) {
-            console.error('Erro no login com Google:', err);
-            alert('❌ Falha ao entrar com o Google.');
+            // Dispara o pop-up nativo com as contas do Gmail
+            const result = await FirebaseAuthentication.signInWithGoogle();
+            
+            // Captura o usuário independente de qual versão do plugin esteja rodando
+            const user = result.user || (result.authentication ? result.authentication : null);
+            
+            if (user) {
+                // Tenta pegar o e-mail ou usa o ID único do Google como garantia de login
+                const emailUsuario = user.email || user.idToken || "usuario_google";
+                
+                // Salva o usuário logado no estado global do aplicativo
+                appState.usuarioLogado = emailUsuario;
+                
+                // Esconde a tela de login e revela a Dashboard principal do app
+                document.getElementById('screen-login').classList.add('hidden');
+                document.getElementById('app-main').classList.remove('hidden');
+                
+                // Executa a função de sucesso para carregar os gráficos e as vacinas da nuvem
+                if (typeof onLoginSuccess === 'function') {
+                    onLoginSuccess();
+                }
+            } else {
+                alert("⚠️ Não foi possível recuperar os dados da sua conta Google.");
+            }
+        } catch (error) {
+            console.error("Erro completo no login com o Google:", error);
+            alert("❌ Erro de conexão com a conta Google.");
         }
     });
 }
