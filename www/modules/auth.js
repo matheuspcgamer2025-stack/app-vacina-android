@@ -107,29 +107,35 @@ export function inicializarAutentication(onLoginSuccess) {
         }
     });
 
-       // ==========================================
-    // AUTENTICAÇÃO NATIVA COM O GOOGLE SIGN-IN (BLINDADA)
+         // ==========================================
+    // AUTENTICAÇÃO NATIVA COM O GOOGLE SIGN-IN (PROGRESIVA)
     // ==========================================
     document.getElementById('btn-google-signin')?.addEventListener('click', async () => {
         try {
-            // Dispara o pop-up nativo com as contas do Gmail
-            const result = await FirebaseAuthentication.signInWithGoogle();
-            
-            // Captura o usuário independente de qual versão do plugin esteja rodando
+            // Acessa o plugin diretamente pela janela global nativa do celular
+            const PluginAuth = window.Capacitor?.Plugins?.FirebaseAuthentication;
+
+            if (!PluginAuth) {
+                // Se rodar no computador, avisa e simula o login para você conseguir testar no PC
+                console.log("🖥️ Rodando no PC: Simulando sucesso de login do Google.");
+                appState.usuarioLogado = "teste_computador@gmail.com";
+                document.getElementById('screen-login').classList.add('hidden');
+                document.getElementById('app-main').classList.remove('hidden');
+                if (typeof onLoginSuccess === 'function') onLoginSuccess();
+                return;
+            }
+
+            // Se estiver no celular, dispara o pop-up nativo oficial do Android
+            const result = await PluginAuth.signInWithGoogle();
             const user = result.user || (result.authentication ? result.authentication : null);
             
             if (user) {
-                // Tenta pegar o e-mail ou usa o ID único do Google como garantia de login
                 const emailUsuario = user.email || user.idToken || "usuario_google";
-                
-                // Salva o usuário logado no estado global do aplicativo
                 appState.usuarioLogado = emailUsuario;
                 
-                // Esconde a tela de login e revela a Dashboard principal do app
                 document.getElementById('screen-login').classList.add('hidden');
                 document.getElementById('app-main').classList.remove('hidden');
                 
-                // Executa a função de sucesso para carregar os gráficos e as vacinas da nuvem
                 if (typeof onLoginSuccess === 'function') {
                     onLoginSuccess();
                 }
