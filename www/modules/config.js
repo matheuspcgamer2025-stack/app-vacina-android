@@ -8,7 +8,7 @@
 // Exemplo: 5588999999999 = +55 (Brasil) 88 (Ceará) 99999-9999
 export const WHATSAPP_CONFIG = {
     // Número de WhatsApp para suporte (ALTERE AQUI!)
-    SUPPORT_NUMBER: '5588999999999',
+    SUPPORT_NUMBER: '5585989963127',
     
     // Mensagem padrão de suporte
     DEFAULT_MESSAGE: 'Olá, preciso de suporte com o VacinaApp!'
