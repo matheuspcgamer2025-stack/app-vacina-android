@@ -1,4 +1,3 @@
-import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { appState, auth } from './database.js';
 // IMPORTAÇÃO OFICIAL DO FIREBASE COM O CAMINHO COMPLETO DO SCRIPT
 import { 
@@ -110,13 +109,16 @@ export function inicializarAutentication(onLoginSuccess) {
          // ==========================================
     // AUTENTICAÇÃO NATIVA COM O GOOGLE SIGN-IN (PROGRESIVA)
     // ==========================================
+      // ==========================================
+    // AUTENTICAÇÃO NATIVA COM O GOOGLE SIGN-IN
+    // ==========================================
     document.getElementById('btn-google-signin')?.addEventListener('click', async () => {
         try {
-            // Acessa o plugin diretamente pela janela global nativa do celular
+            // Acessa o plugin de forma segura pela janela global do celular
             const PluginAuth = window.Capacitor?.Plugins?.FirebaseAuthentication;
 
             if (!PluginAuth) {
-                // Se rodar no computador, avisa e simula o login para você conseguir testar no PC
+                // Se rodar no computador (Live Server), simula o login para não travar o PC
                 console.log("🖥️ Rodando no PC: Simulando sucesso de login do Google.");
                 appState.usuarioLogado = "teste_computador@gmail.com";
                 document.getElementById('screen-login').classList.add('hidden');
@@ -125,7 +127,7 @@ export function inicializarAutentication(onLoginSuccess) {
                 return;
             }
 
-            // Se estiver no celular, dispara o pop-up nativo oficial do Android
+            // Se estiver rodando no celular Android, dispara o pop-up nativo oficial
             const result = await PluginAuth.signInWithGoogle();
             const user = result.user || (result.authentication ? result.authentication : null);
             
