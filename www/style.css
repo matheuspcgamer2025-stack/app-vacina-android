@@ -164,7 +164,6 @@ html, body, #app-main, .app-content, .screen, .sub-screen {
 /* ==========================================================================
    3. COMPONENTES BASE (INPUTS, BOTÕES E CAIXAS ESTRUTURAIS)
    ========================================================================== */
-/* Procure por input, select, textarea no Bloco 3 e mude para: */
 input, select, textarea { 
     width: 100%; 
     padding: 0.75rem 1rem; /* Ajusta o espaçamento interno para o texto não sumir */
@@ -249,19 +248,22 @@ body.dark-theme .btn-google {
     align-items: center;
     width: 100%;
     gap: 0;
+    margin-bottom: 0; /* Remove qualquer margem que estique o bloco */
+    padding: 0;
 }
 
 .password-wrapper .password-input { 
     padding-right: 2.75rem;
     flex: 1;
-    margin-bottom: 0;
+    margin-bottom: 0; /* Garante que o input não empurre o olho para baixo */
 }
 
+/* Botão do Olho */
 .btn-password-toggle {
     position: absolute;
     right: 0.5rem;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(-50%); /* Centralização matemática perfeita */
     background: transparent;
     border: none;
     cursor: pointer;
@@ -273,10 +275,9 @@ body.dark-theme .btn-google {
     height: 2.25rem;
     padding: 0;
     margin: 0;
-    transition: color 0.2s ease;
-    flex-shrink: 0;
     z-index: 10;
 }
+
 
 .btn-password-toggle:hover {
     color: var(--primary);
