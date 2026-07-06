@@ -243,27 +243,31 @@ body.dark-theme .btn-google {
 
 /* Toggle visualizar senha */
 .password-wrapper { 
-    position: relative;
     display: flex;
     align-items: center;
     width: 100%;
-    gap: 0;
-    margin-bottom: 0; /* Remove qualquer margem que estique o bloco */
-    padding: 0;
+    background-color: #191922; /* Ajuste para a cor escura do fundo dos seus inputs */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Bordinha sutil */
+    border-radius: 0.5rem;
+    overflow: hidden;
 }
 
 .password-wrapper .password-input { 
-    padding-right: 2.75rem;
     flex: 1;
-    margin-bottom: 0; /* Garante que o input não empurre o olho para baixo */
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1rem;
+    margin: 0;
+    color: #ffffff;
+    height: auto;
+}
+
+.password-wrapper .password-input:focus {
+    outline: none;
 }
 
 /* Botão do Olho */
 .btn-password-toggle {
-    position: absolute;
-    right: 0.5rem;
-    top: 50%;
-    transform: translateY(-50%); /* Centralização matemática perfeita */
     background: transparent;
     border: none;
     cursor: pointer;
@@ -271,13 +275,13 @@ body.dark-theme .btn-google {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2.5rem;
+    height: 100%;
     padding: 0;
     margin: 0;
+    flex-shrink: 0;
     z-index: 10;
 }
-
 
 .btn-password-toggle:hover {
     color: var(--primary);
