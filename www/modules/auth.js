@@ -276,6 +276,7 @@ export function inicializarAutentication(onLoginSuccess) {
 
             const resultado = await FirebaseAuthentication.signInWithGoogle();
             const idToken = resultado?.credential?.idToken || resultado?.authentication?.idToken;
+            const accessToken = resultado?.credential?.accessToken || resultado?.authentication?.accessToken;
             const email = resultado?.user?.email;
             
             if (idToken) {
@@ -289,11 +290,19 @@ export function inicializarAutentication(onLoginSuccess) {
                     appMain,
                     onLoginSuccess
                 );
-            } else if (email) {
-                // Fallback para cenarios em que o plugin nao retorne token
-                concluirLogin(email, email, screenLogin, appMain, onLoginSuccess);
+            } else if (accessToken) {
+                // Alguns dispositivos podem retornar apenas accessToken
+                const credential = GoogleAuthProvider.credential(null, accessToken);
+                await signInWithCredential(auth, credential);
+                concluirLogin(
+                    email || auth.currentUser?.email || 'usuario_google',
+                    auth.currentUser?.email || email,
+                    screenLogin,
+                    appMain,
+                    onLoginSuccess
+                );
             } else {
-                alert("⚠️ Não foi possível recuperar as credenciais da conta Google.");
+                alert("❌ Login Google incompleto: não recebemos token para autenticar no Firebase. Tente novamente.");
             }
         } catch (error) {
             console.error("Erro completo no login com o Google:", error);

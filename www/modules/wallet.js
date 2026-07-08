@@ -60,7 +60,25 @@ export function configurarFormularioCarteira(onUpdate) {
             await carregarDadosDoFirebase(onUpdate);
         } catch (error) {
             console.error("Erro ao salvar no Firestore:", error);
-            alert("❌ Erro de conexão: Não foi possível salvar os dados na nuvem.");
+            const codigo = error?.code || '';
+            const mensagem = error?.message || 'sem detalhe';
+
+            if (codigo === 'permission-denied') {
+                alert('❌ Sem permissão para salvar no Firestore. Faça login novamente com Google para renovar a sessão.');
+                return;
+            }
+
+            if (codigo === 'unauthenticated') {
+                alert('❌ Sessão inválida no Firebase. Entre novamente para salvar na nuvem.');
+                return;
+            }
+
+            if (codigo === 'unavailable') {
+                alert('❌ Firestore indisponível no momento. Verifique a conexão e tente novamente.');
+                return;
+            }
+
+            alert(`❌ Erro ao salvar na nuvem. Código: ${codigo || 'desconhecido'}. Detalhe: ${mensagem}`);
         }
     });
 }
