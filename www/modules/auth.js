@@ -1,15 +1,17 @@
-import { appState, auth } from './database.js';
-// IMPORTAÇÃO OFICIAL DO FIREBASE COM O CAMINHO COMPLETO DO SCRIPT
 import { 
+    appState, 
+    auth, 
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword,
     GoogleAuthProvider,
+    signInWithCredential,
     signInWithPopup
-} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+} from './database.js';
 
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REGEX_CPF = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
 const REGEX_SENHA = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\S]{8,}$/;
+const CHAVE_CONTAS_LOCAIS = 'vacinaapp_contas_locais_v1';
 
 function validarIdentificador(valor) {
     if (REGEX_EMAIL.test(valor)) return { valido: true, tipo: 'email' };
@@ -19,6 +21,132 @@ function validarIdentificador(valor) {
 
 function validarSenhaForte(senha) {
     return REGEX_SENHA.test(senha);
+}
+
+function normalizarIdentificador(id) {
+    const texto = id.trim();
+    const validacao = validarIdentificador(texto);
+    if (!validacao.valido) return null;
+    if (validacao.tipo === 'cpf') return { tipo: 'cpf', valor: texto.replace(/\D/g, '') };
+    return { tipo: 'email', valor: texto.toLowerCase() };
+}
+
+function obterContasLocais() {
+    try {
+        return JSON.parse(localStorage.getItem(CHAVE_CONTAS_LOCAIS) || '[]');
+    } catch (_) {
+        return [];
+    }
+}
+
+function salvarContasLocais(contas) {
+    localStorage.setItem(CHAVE_CONTAS_LOCAIS, JSON.stringify(contas));
+}
+
+function salvarContaLocal(id, senha) {
+    const norm = normalizarIdentificador(id);
+    if (!norm) return;
+    const contas = obterContasLocais();
+    const idx = contas.findIndex(c => c.tipo === norm.tipo && c.valor === norm.valor);
+    const conta = { tipo: norm.tipo, valor: norm.valor, senha };
+    if (idx >= 0) contas[idx] = conta;
+    else contas.push(conta);
+    salvarContasLocais(contas);
+}
+
+function loginLocal(id, senha) {
+    const norm = normalizarIdentificador(id);
+    if (!norm) return false;
+    const contas = obterContasLocais();
+    const conta = contas.find(c => c.tipo === norm.tipo && c.valor === norm.valor);
+    return Boolean(conta && conta.senha === senha);
+}
+
+function resolverIdentificadorPrincipal(id, authEmail) {
+    if (authEmail) return authEmail.trim().toLowerCase();
+
+    const norm = normalizarIdentificador(id);
+    if (!norm) return id.trim().toLowerCase();
+    if (norm.tipo === 'cpf') return `${norm.valor}@vacinaapp.local`;
+    return norm.valor;
+}
+
+function construirIdentificadoresUsuario(id, principal) {
+    const identificadores = new Set([principal, id.trim()]);
+    const norm = normalizarIdentificador(id);
+
+    if (norm) {
+        if (norm.tipo === 'cpf') {
+            identificadores.add(norm.valor);
+            identificadores.add(`${norm.valor}@vacinaapp.local`);
+        } else {
+            identificadores.add(norm.valor);
+        }
+    }
+
+    return Array.from(identificadores)
+        .map(valor => String(valor || '').trim())
+        .filter(Boolean)
+        .slice(0, 10);
+}
+
+function concluirLogin(id, authEmail, screenLogin, appMain, onLoginSuccess) {
+    const principal = resolverIdentificadorPrincipal(id, authEmail);
+    appState.usuarioLogado = principal;
+    appState.identificadoresUsuario = construirIdentificadoresUsuario(id, principal);
+    screenLogin.classList.add('hidden');
+    appMain.classList.remove('hidden');
+    if (typeof onLoginSuccess === 'function') onLoginSuccess();
+}
+
+function exibirErroAutenticacao(error) {
+    const codigo = error?.code || '';
+    if (codigo === 'auth/popup-closed-by-user' || codigo === 'auth/cancelled-popup-request') {
+        alert('⚠️ Login com Google cancelado.');
+        return;
+    }
+    if (codigo === 'auth/invalid-credential' || codigo === 'auth/wrong-password' || codigo === 'auth/user-not-found') {
+        alert('❌ Credenciais inválidas. Confira e-mail/CPF e senha.');
+        return;
+    }
+    if (codigo === 'auth/network-request-failed') {
+        alert('❌ Falha de rede ao autenticar. Verifique sua conexão e bloqueadores de rastreio/extensões do navegador.');
+        return;
+    }
+    alert('❌ Falha na autenticação. Tente novamente.');
+}
+
+function extrairCodigoGoogle(error) {
+    return (
+        error?.code ||
+        error?.status ||
+        error?.nativeErrorCode ||
+        error?.result?.status ||
+        error?.data?.code ||
+        ''
+    );
+}
+
+function exibirErroGoogleDetalhado(error) {
+    const codigo = String(extrairCodigoGoogle(error));
+    const mensagem = error?.message || error?.localizedMessage || 'sem detalhe adicional';
+
+    if (codigo === '10' || mensagem.toUpperCase().includes('DEVELOPER_ERROR')) {
+        alert('❌ Google Sign-In falhou (DEVELOPER_ERROR/10). Verifique SHA, package name e google-services.json atual no app.');
+        return;
+    }
+
+    if (codigo === '12501' || codigo === '16') {
+        alert('⚠️ Login Google cancelado pelo usuário.');
+        return;
+    }
+
+    if (codigo === '7' || codigo === 'auth/network-request-failed') {
+        alert('❌ Falha de rede no login Google. Verifique internet do celular.');
+        return;
+    }
+
+    alert(`❌ Falha no Google Sign-In. Código: ${codigo || 'desconhecido'}. Detalhe: ${mensagem}`);
 }
 
 export function inicializarAutentication(onLoginSuccess) {
@@ -51,23 +179,35 @@ export function inicializarAutentication(onLoginSuccess) {
         const senha = document.getElementById('login-senha').value;
         
         const validacao = validarIdentificador(id);
-        if (!validacao.valido || !validarSenhaForte(senha)) {
-            alert("❌ Dados inválidos ou senha fora do padrão seguro!");
+        if (!validacao.valido || !senha) {
+            alert("❌ Informe um CPF/e-mail válido e a senha.");
             return;
         }
 
-        const emailFirebase = validacao.tipo === 'cpf' ? `${id.replace(/\D/g, '')}@vacinaapp.local` : id;
+        const emailFirebase = validacao.tipo === 'cpf' ? `${id.replace(/\D/g, '')}@vacinaapp.local` : id.toLowerCase();
 
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, emailFirebase, senha);
-            appState.usuarioLogado = id;
-            
-            screenLogin.classList.add('hidden');
-            appMain.classList.remove('hidden');
-            onLoginSuccess();
+            await signInWithEmailAndPassword(auth, emailFirebase, senha);
+            salvarContaLocal(id, senha);
+            concluirLogin(id, auth.currentUser?.email, screenLogin, appMain, onLoginSuccess);
         } catch (error) {
             console.error("Erro no login:", error);
-            alert("❌ Falha na autenticação! Verifique se o e-mail/CPF e a senha estão corretos.");
+            if (error?.code === 'auth/network-request-failed') {
+                if (loginLocal(id, senha)) {
+                    concluirLogin(id, null, screenLogin, appMain, onLoginSuccess);
+                    alert('⚠️ Sem conexão com Firebase. Login local offline realizado com sucesso.');
+                    return;
+                }
+
+                const criarContaOffline = confirm('Sem conexão com Firebase e não encontramos conta local para este CPF/e-mail. Deseja criar uma conta local offline neste dispositivo com essas credenciais?');
+                if (criarContaOffline) {
+                    salvarContaLocal(id, senha);
+                    concluirLogin(id, null, screenLogin, appMain, onLoginSuccess);
+                    alert('⚠️ Conta local offline criada e login realizado neste dispositivo.');
+                    return;
+                }
+            }
+            exibirErroAutenticacao(error);
         }
     });
 
@@ -86,18 +226,21 @@ export function inicializarAutentication(onLoginSuccess) {
             return;
         }
 
-        const emailFirebase = validacao.tipo === 'cpf' ? `${id.replace(/\D/g, '')}@vacinaapp.local` : id;
+        const emailFirebase = validacao.tipo === 'cpf' ? `${id.replace(/\D/g, '')}@vacinaapp.local` : id.toLowerCase();
 
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, emailFirebase, senha);
+            await createUserWithEmailAndPassword(auth, emailFirebase, senha);
             alert("🎉 Conta criada com sucesso com segurança na nuvem!");
-            appState.usuarioLogado = id;
-            
-            screenRegister.classList.add('hidden');
-            appMain.classList.remove('hidden');
-            onLoginSuccess();
+            salvarContaLocal(id, senha);
+            concluirLogin(id, auth.currentUser?.email, screenRegister, appMain, onLoginSuccess);
         } catch (error) {
             console.error("Erro no cadastro:", error);
+            if (error?.code === 'auth/network-request-failed') {
+                salvarContaLocal(id, senha);
+                concluirLogin(id, null, screenRegister, appMain, onLoginSuccess);
+                alert('⚠️ Sem conexão com Firebase. Conta salva localmente neste dispositivo e login realizado.');
+                return;
+            }
             if (error.code === 'auth/email-already-in-use') {
                 alert("❌ Este CPF ou E-mail já está cadastrado no sistema!");
             } else {
@@ -106,47 +249,59 @@ export function inicializarAutentication(onLoginSuccess) {
         }
     });
 
-         // ==========================================
-    // AUTENTICAÇÃO NATIVA COM O GOOGLE SIGN-IN (PROGRESIVA)
     // ==========================================
-      // ==========================================
     // AUTENTICAÇÃO NATIVA COM O GOOGLE SIGN-IN
     // ==========================================
     document.getElementById('btn-google-signin')?.addEventListener('click', async () => {
         try {
-            // Acessa o plugin de forma segura pela janela global do celular
-            const PluginAuth = window.Capacitor?.Plugins?.FirebaseAuthentication;
+            const FirebaseAuthentication = window.Capacitor?.Plugins?.FirebaseAuthentication;
+            const provider = new GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: 'select_account' });
 
-            if (!PluginAuth) {
-                // Se rodar no computador (Live Server), simula o login para não travar o PC
-                console.log("🖥️ Rodando no PC: Simulando sucesso de login do Google.");
-                appState.usuarioLogado = "teste_computador@gmail.com";
-                document.getElementById('screen-login').classList.add('hidden');
-                document.getElementById('app-main').classList.remove('hidden');
-                if (typeof onLoginSuccess === 'function') onLoginSuccess();
+            if (!FirebaseAuthentication) {
+                // No navegador, usa popup real do Google/Firebase em vez de login simulado.
+                const credencialWeb = await signInWithPopup(auth, provider);
+                concluirLogin(
+                    credencialWeb?.user?.email || 'usuario_google',
+                    credencialWeb?.user?.email,
+                    screenLogin,
+                    appMain,
+                    onLoginSuccess
+                );
                 return;
             }
 
-            // Se estiver rodando no celular Android, dispara o pop-up nativo oficial
-            const result = await PluginAuth.signInWithGoogle();
-            const user = result.user || (result.authentication ? result.authentication : null);
+            // Força a desconexao previa para garantir escolha de conta no Android
+            try { await FirebaseAuthentication.signOut(); } catch (_) {}
+
+            const resultado = await FirebaseAuthentication.signInWithGoogle();
+            const idToken = resultado?.credential?.idToken || resultado?.authentication?.idToken;
+            const email = resultado?.user?.email;
             
-            if (user) {
-                const emailUsuario = user.email || user.idToken || "usuario_google";
-                appState.usuarioLogado = emailUsuario;
-                
-                document.getElementById('screen-login').classList.add('hidden');
-                document.getElementById('app-main').classList.remove('hidden');
-                
-                if (typeof onLoginSuccess === 'function') {
-                    onLoginSuccess();
-                }
+            if (idToken) {
+                // Conecta a sessao do Google com o Firebase Auth Web SDK
+                const credential = GoogleAuthProvider.credential(idToken);
+                await signInWithCredential(auth, credential);
+                concluirLogin(
+                    email || auth.currentUser?.email || 'usuario_google',
+                    auth.currentUser?.email || email,
+                    screenLogin,
+                    appMain,
+                    onLoginSuccess
+                );
+            } else if (email) {
+                // Fallback para cenarios em que o plugin nao retorne token
+                concluirLogin(email, email, screenLogin, appMain, onLoginSuccess);
             } else {
-                alert("⚠️ Não foi possível recuperar os dados da sua conta Google.");
+                alert("⚠️ Não foi possível recuperar as credenciais da conta Google.");
             }
         } catch (error) {
             console.error("Erro completo no login com o Google:", error);
-            alert("❌ Erro de conexão com a conta Google.");
+            if (error?.code === 'auth/network-request-failed') {
+                alert('❌ Google Login indisponível sem acesso aos servidores Google/Firebase. Use CPF/E-mail (modo offline local).');
+                return;
+            }
+            exibirErroGoogleDetalhado(error);
         }
     });
 }

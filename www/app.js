@@ -5,7 +5,7 @@ import { inicializarAutentication } from './modules/auth.js';
 import { mudarAba } from './modules/navigation.js';
 import { inicializarDashboard } from './modules/dashboard.js';
 import { filtrarCalendario } from './modules/calendar.js';
-import { configurarFormularioCarteira, renderizarCarteira } from './modules/wallet.js';
+import { configurarFormularioCarteira, renderizarCarteira, carregarDadosDoFirebase } from './modules/wallet.js';
 import { renderizarLembretes, configurarNotificacoes } from './modules/reminders.js';
 import { buscarEExibirPosto } from './modules/gps.js';
 
@@ -37,8 +37,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     inicializarSidebar();
 
-    // Quando o login ou cadastro der certo, puxa os dados e inicia o painel
-    inicializarAutentication(() => {
+    // Quando o login ou cadastro der certo, sincroniza com a nuvem e atualiza a UI
+    inicializarAutentication(async () => {
+        await carregarDadosDoFirebase(() => {
+            renderizarCarteira();
+            inicializarDashboard();
+        });
+
+        // Fallback caso o callback acima nao rode por qualquer motivo
+        renderizarCarteira();
         inicializarDashboard();
     });
 
@@ -147,15 +154,3 @@ window.filtrarCalendario = filtrarCalendario;
 window.configurarNotificacoes = configurarNotificacoes;
 window.localizarPostoMaisProximo = buscarEExibirPosto;
 
-// 4. MECANISMO DE SAÍDA SUAVE DA TELA DE ABERTURA (ZE GOTINHA)
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        const splash = document.getElementById('app-splash');
-        if (splash) {
-            splash.style.opacity = '0';
-            setTimeout(() => {
-                splash.remove(); // Destrói o elemento para liberar memória do Android
-            }, 500);
-        }
-    }, 2000); // Mantém o Zé Gotinha exibido por 2 segundos exatos
-});

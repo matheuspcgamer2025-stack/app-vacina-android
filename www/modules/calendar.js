@@ -120,12 +120,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (inputBusca) {
         inputBusca.addEventListener('input', (e) => {
             const texto = e.target.value.trim().toLowerCase();
-            renderistarListaFiltrada(texto);
+            renderizarListaFiltrada(texto);
         });
     }
 });
 
 // Vincula a função interna à janela global para o input do HTML continuar funcionando
-window.renderistarListaFiltrada = renderizarListaFiltrada;
+window.renderizarListaFiltrada = renderizarListaFiltrada;
 
 

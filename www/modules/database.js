@@ -3,7 +3,14 @@
    ========================================================================== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+import { 
+    getAuth, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword,
+    GoogleAuthProvider,
+    signInWithCredential,
+    signInWithPopup
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
 // Suas chaves oficiais do console ajustadas e sem cortes de texto
 const firebaseConfig = {
@@ -20,9 +27,19 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
+// EXPORTAÇÃO DAS FUNÇÕES DE AUTENTICAÇÃO PARA OS OUTROS MÓDULOS
+export { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword,
+    GoogleAuthProvider,
+    signInWithCredential,
+    signInWithPopup
+};
+
 // Estado global do aplicativo conectado à nuvem (Obrigatório para o app.js)
 export const appState = {
     usuarioLogado: null, 
+    identificadoresUsuario: [],
     perfilAtual: "principal", 
     carteira: [] 
 };

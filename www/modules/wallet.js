@@ -72,12 +72,22 @@ export async function carregarDadosDoFirebase(onUpdateCallback) {
     if (!appState.usuarioLogado) return;
 
     try {
-        // Cria uma consulta filtrando apenas as vacinas pertencentes ao usuário logado
-        const q = query(
-            collection(db, "vacinas"), 
-            where("usuarioId", "==", appState.usuarioLogado)
-        );
-        
+        const identificadores = Array.isArray(appState.identificadoresUsuario)
+            ? appState.identificadoresUsuario.filter(Boolean)
+            : [];
+
+        const idsConsulta = Array.from(new Set([
+            appState.usuarioLogado,
+            ...identificadores
+        ].filter(Boolean))).slice(0, 10);
+
+        if (idsConsulta.length === 0) return;
+
+        // Compatibilidade: consulta tanto o identificador principal quanto aliases legados
+        const q = idsConsulta.length === 1
+            ? query(collection(db, "vacinas"), where("usuarioId", "==", idsConsulta[0]))
+            : query(collection(db, "vacinas"), where("usuarioId", "in", idsConsulta));
+
         const querySnapshot = await getDocs(q);
         
         // Limpa a carteira local antiga para reescrevê-la com os dados frescos do servidor
