@@ -1,4 +1,4 @@
-import { db, appState } from './database.js';
+import { db, appState, auth } from './database.js';
 import { calcularIntervaloDose } from './features.js';
 // CORREÇÃO DA IMPORTAÇÃO: Usando a URL completa oficial da Google sem cortes
 import { 
@@ -32,8 +32,12 @@ export function configurarFormularioCarteira(onUpdate) {
         const proximaDoseCalculada = calcularIntervaloDose(nomeSelecionado, dataOriginal);
 
         // Monta o objeto com as chaves estruturadas para o Firestore
+        const emailAtual = auth.currentUser?.email || null;
+        const uidAtual = auth.currentUser?.uid || null;
+
         const novaVacina = {
-            usuarioId: appState.usuarioLogado || "anonimo", // Vincula ao login ativo
+            usuarioId: emailAtual || appState.usuarioLogado || "anonimo", // Vincula ao login ativo
+            usuarioUid: uidAtual, // Vinculo primario para regras seguras no Firestore
             perfilId: appState.perfilAtual || "principal",   // Vincula ao perfil/dependente ativo
             nome: nomeSelecionado,
             lote: document.getElementById('vax-lote').value.trim(),
@@ -90,6 +94,7 @@ export async function carregarDadosDoFirebase(onUpdateCallback) {
     if (!appState.usuarioLogado) return;
 
     try {
+        const uidAtual = auth.currentUser?.uid || null;
         const identificadores = Array.isArray(appState.identificadoresUsuario)
             ? appState.identificadoresUsuario.filter(Boolean)
             : [];
@@ -101,20 +106,35 @@ export async function carregarDadosDoFirebase(onUpdateCallback) {
 
         if (idsConsulta.length === 0) return;
 
-        // Compatibilidade: consulta tanto o identificador principal quanto aliases legados
-        const q = idsConsulta.length === 1
-            ? query(collection(db, "vacinas"), where("usuarioId", "==", idsConsulta[0]))
-            : query(collection(db, "vacinas"), where("usuarioId", "in", idsConsulta));
+        // Compatibilidade: prioriza UID atual e complementa por identificadores legados
+        const consultas = [];
+        if (uidAtual) {
+            consultas.push(getDocs(query(collection(db, "vacinas"), where("usuarioUid", "==", uidAtual))));
+        }
 
-        const querySnapshot = await getDocs(q);
+        consultas.push(
+            getDocs(
+                idsConsulta.length === 1
+                    ? query(collection(db, "vacinas"), where("usuarioId", "==", idsConsulta[0]))
+                    : query(collection(db, "vacinas"), where("usuarioId", "in", idsConsulta))
+            )
+        );
+
+        const snapshots = await Promise.all(consultas);
         
         // Limpa a carteira local antiga para reescrevê-la com os dados frescos do servidor
         appState.carteira = [];
+        const idsAdicionados = new Set();
         
-        querySnapshot.forEach((documento) => {
-            appState.carteira.push({
-                id: documento.id, // O ID único gerado de forma aleatória pela Google
-                ...documento.data()
+        snapshots.forEach((querySnapshot) => {
+            querySnapshot.forEach((documento) => {
+                if (idsAdicionados.has(documento.id)) return;
+                idsAdicionados.add(documento.id);
+
+                appState.carteira.push({
+                    id: documento.id, // O ID único gerado de forma aleatória pela Google
+                    ...documento.data()
+                });
             });
         });
 

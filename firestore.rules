@@ -6,11 +6,28 @@ service cloud.firestore {
     }
 
     function userEmail() {
-      return lower(request.auth.token.email);
+      return request.auth.token.email is string
+        ? request.auth.token.email
+        : '';
+    }
+
+    function ownerByUid(data) {
+      return data.usuarioUid is string
+        && data.usuarioUid == request.auth.uid;
+    }
+
+    function ownerByEmail(data) {
+      return data.usuarioId is string
+        && data.usuarioId == userEmail();
+    }
+
+    function isOwner(data) {
+      return ownerByUid(data) || ownerByEmail(data);
     }
 
     function validVaccinePayload(data) {
       return data.usuarioId is string
+        && (!('usuarioUid' in data) || data.usuarioUid == null || data.usuarioUid is string)
         && data.perfilId is string
         && data.nome is string
         && data.lote is string
@@ -23,11 +40,10 @@ service cloud.firestore {
     match /vacinas/{vacinaId} {
       allow create: if isSignedIn()
         && validVaccinePayload(request.resource.data)
-        && request.resource.data.usuarioId == userEmail();
+        && isOwner(request.resource.data);
 
       allow read, update, delete: if isSignedIn()
-        && resource.data.usuarioId is string
-        && resource.data.usuarioId == userEmail();
+        && isOwner(resource.data);
     }
   }
 }
