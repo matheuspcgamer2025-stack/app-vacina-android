@@ -473,6 +473,28 @@ body .card:hover, body .vax-item:hover, body .login-container:hover {
     max-width: 37.5rem; 
     margin: 0 auto; 
 }
+.gender-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.625rem;
+}
+
+.gender-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.625rem;
+    font-size: 0.875rem;
+    background: var(--bg-app);
+    margin-bottom: 0;
+}
+
+.gender-option input[type="radio"] {
+    width: auto;
+    margin: 0;
+}
 
 /* Evita que um gesto horizontal no conteúdo faça a tela principal deslocar-se */
 .app-content {
@@ -484,12 +506,37 @@ body .card:hover, body .vax-item:hover, body .login-container:hover {
    ========================================================================== */
 /* Dashboard */
 .progress-container { 
+.today-vax-banner {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-radius: 0.875rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid #f0ad4e;
+    background: linear-gradient(90deg, rgba(240, 173, 78, 0.16), rgba(217, 83, 79, 0.16));
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.875rem;
+}
     background: #eee; 
     border-radius: 0.9375rem; 
     overflow: hidden; 
     margin: 0.75rem 0; 
+.reminder-card.overdue {
+    border-color: rgba(217, 83, 79, 0.55);
+    background: rgba(217, 83, 79, 0.1);
 }
 
+.reminder-card.overdue .reminder-card-icon {
+    background: rgba(217, 83, 79, 0.16);
+    color: var(--danger);
+}
+
+.reminder-card.overdue .reminder-card-badge {
+    background: var(--danger);
+}
+}
+
+body .vax-item.overdue { border-left-color: var(--danger); }
 body.dark-theme .progress-container { 
     background: #252530; 
 }

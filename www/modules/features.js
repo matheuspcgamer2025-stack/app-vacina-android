@@ -1,6 +1,7 @@
 import { appState, auth, db } from './database.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
 import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+import { formatarIdadeHumana } from './profile.js';
 
 const CHAVE_DEPENDENTES = 'app_dependentes';
 
@@ -18,16 +19,17 @@ function salvarDependentesLocais(dependentes) {
 
 function normalizarDependente(dep) {
     const nome = String(dep?.nome || '').trim();
-    const sexo = String(dep?.sexo || 'Não informado').trim() || 'Não informado';
-    const idadeValor = Number(dep?.idade);
-    const idade = Number.isFinite(idadeValor) && idadeValor >= 0 ? idadeValor : null;
+    const sexoRaw = String(dep?.sexo || 'Feminino').trim();
+    const sexo = sexoRaw === 'Masculino' ? 'Masculino' : 'Feminino';
+    const dataNascimento = String(dep?.dataNascimento || '').trim();
+    const dataNascimentoValida = /^\d{4}-\d{2}-\d{2}$/.test(dataNascimento) ? dataNascimento : null;
 
     if (!nome) return null;
 
     return {
         id: dep?.id || `dep_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         nome,
-        idade,
+        dataNascimento: dataNascimentoValida,
         sexo
     };
 }
@@ -64,7 +66,7 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
     const formDependente = document.getElementById('dependente-form');
     const inputDepId = document.getElementById('dependente-id');
     const inputDepNome = document.getElementById('dependente-nome');
-    const inputDepIdade = document.getElementById('dependente-idade');
+    const inputDepNascimento = document.getElementById('dependente-data-nascimento');
     const inputDepSexo = document.getElementById('dependente-sexo');
     const btnCancelarEdicao = document.getElementById('btn-cancelar-dependente');
 
@@ -100,10 +102,11 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
         dependentes.forEach(dep => {
             const item = document.createElement('li');
             item.className = 'dependente-item';
+            const idadeExibicao = formatarIdadeHumana(dep.dataNascimento);
             item.innerHTML = `
                 <div class="dependente-info">
                     <strong>${dep.nome}</strong>
-                    <span>${dep.idade ?? 'Idade não informada'} ${dep.idade === null ? '' : 'anos'} • ${dep.sexo}</span>
+                    <span>${idadeExibicao} • ${dep.sexo}</span>
                 </div>
                 <div class="dependente-actions">
                     <button type="button" class="btn-mini btn-switch" data-action="switch" data-id="${dep.id}">Carteira</button>
@@ -120,8 +123,8 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
         formDependente.classList.remove('hidden');
         inputDepId.value = dep?.id || '';
         inputDepNome.value = dep?.nome || '';
-        inputDepIdade.value = dep?.idade ?? '';
-        inputDepSexo.value = dep?.sexo || 'Não informado';
+        inputDepNascimento.value = dep?.dataNascimento || '';
+        inputDepSexo.value = dep?.sexo || 'Feminino';
         inputDepNome.focus();
     }
 
@@ -130,7 +133,7 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
         formDependente.classList.add('hidden');
         formDependente.reset();
         inputDepId.value = '';
-        inputDepSexo.value = 'Não informado';
+        inputDepSexo.value = 'Feminino';
     }
 
     async function persistirDependentes() {
@@ -232,12 +235,17 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
         const depNormalizado = normalizarDependente({
             id: inputDepId.value || undefined,
             nome: inputDepNome.value,
-            idade: inputDepIdade.value,
+            dataNascimento: inputDepNascimento.value,
             sexo: inputDepSexo.value
         });
 
         if (!depNormalizado) {
             alert('❌ Informe um nome válido para o dependente.');
+            return;
+        }
+
+        if (!depNormalizado.dataNascimento) {
+            alert('❌ Informe uma data de nascimento válida para o dependente.');
             return;
         }
 

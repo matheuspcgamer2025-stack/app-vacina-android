@@ -1,6 +1,9 @@
 import { CALENDARIO_SUS, appState } from './database.js';
+import { obterDependentesLocais, obterPerfilAtivo, obterPerfilTitular } from './profile.js';
+import { montarPendenciasPersonalizadas } from './schedule.js';
 
 const REMINDERS_DISMISSED_KEY = 'vacina_dismissed_reminders';
+const SCHEDULED_IDS_KEY = 'vacina_scheduled_notification_ids';
 
 function carregarLembretesDescartados() {
     return JSON.parse(localStorage.getItem(REMINDERS_DISMISSED_KEY) || '[]');
@@ -10,26 +13,47 @@ function salvarLembretesDescartados(descartados) {
     localStorage.setItem(REMINDERS_DISMISSED_KEY, JSON.stringify(descartados));
 }
 
-function descartarLembrete(nome) {
+function descartarLembrete(chave) {
     const descartados = carregarLembretesDescartados();
-    if (!descartados.includes(nome)) {
-        descartados.push(nome);
+    if (!descartados.includes(chave)) {
+        descartados.push(chave);
         salvarLembretesDescartados(descartados);
     }
     renderizarLembretes();
 }
 
+function chaveLembrete(vacina, perfilId) {
+    return `${perfilId}::${vacina.nome}::${vacina.dataAlvoIso || vacina.recomendacao || 'sem-data'}`;
+}
+
+function obterPendenciasPerfilAtual() {
+    const perfilAtivo = appState.perfilAtual || 'principal';
+    const perfilInfo = obterPerfilAtivo(perfilAtivo);
+    const carteiraPerfil = appState.carteira.filter(v => (v.perfilId || 'principal') === perfilAtivo);
+    return montarPendenciasPersonalizadas(CALENDARIO_SUS, carteiraPerfil, perfilInfo.dataNascimento)
+        .map(item => ({ ...item, perfilId: perfilAtivo, perfilNome: perfilInfo.nome }));
+}
+
 export function renderizarLembretes() {
     const list = document.getElementById('reminders-list');
+    const bannerHoje = document.getElementById('reminders-today-banner');
     if (!list) return; // Proteção contra erro de elemento não encontrado
     
     list.innerHTML = "";
-    
-    const nomesJaTomados = appState.carteira.map(v => v.nome.toLowerCase());
+
     const descartados = carregarLembretesDescartados();
-    const pendentes = CALENDARIO_SUS
-        .filter(v => !nomesJaTomados.some(j => j.includes(v.nome.toLowerCase())))
-        .filter(v => !descartados.includes(v.nome));
+    const pendentes = obterPendenciasPerfilAtual().filter(p => !descartados.includes(chaveLembrete(p, p.perfilId)));
+    const vacinasHoje = pendentes.filter(p => p.status === 'hoje');
+
+    if (bannerHoje) {
+        if (vacinasHoje.length > 0) {
+            bannerHoje.classList.remove('hidden');
+            bannerHoje.innerHTML = `🚨 Vacinas de Hoje: ${vacinasHoje.map(v => v.nome).join(', ')}. Priorize a aplicação ainda hoje.`;
+        } else {
+            bannerHoje.classList.add('hidden');
+            bannerHoje.innerHTML = '';
+        }
+    }
 
     if (pendentes.length === 0) {
         const li = document.createElement('li');
@@ -47,23 +71,39 @@ export function renderizarLembretes() {
 
     pendentes.forEach(p => {
         const li = document.createElement('li');
-        li.className = 'reminder-card';
+        li.className = `reminder-card ${p.status === 'atrasada' ? 'overdue' : ''}`;
 
         const icon = document.createElement('div');
         icon.className = 'reminder-card-icon';
-        icon.textContent = '🔔';
+        icon.textContent = p.status === 'atrasada' ? '⚠️' : p.status === 'hoje' ? '🚨' : '🔔';
         icon.setAttribute('aria-hidden', 'true');
 
         const content = document.createElement('div');
         content.className = 'reminder-card-content';
+        const subtitulo = p.status === 'agendada'
+            ? `Faltam ${p.diasParaDataAlvo} dias · Data alvo ${p.dataAlvoBr}`
+            : p.status === 'hoje'
+                ? `Agendada para hoje (${p.dataAlvoBr})`
+                : p.status === 'atrasada'
+                    ? `⚠️ Alerta: Vacina com atraso de ${p.diasAtraso} dias! Recomenda-se atualizar a carteira de imunização.`
+                    : p.dataAlvoBr
+                        ? `Agendada para ${p.dataAlvoBr}`
+                        : p.recomendacao;
+
         content.innerHTML = `
             <span class="reminder-card-title">${p.nome}</span>
-            <small class="reminder-card-text">${p.recomendacao}</small>
+            <small class="reminder-card-text">${subtitulo}</small>
         `;
 
         const badge = document.createElement('span');
         badge.className = 'reminder-card-badge';
-        badge.textContent = 'Lembrete';
+        badge.textContent = p.status === 'atrasada'
+            ? 'Dose Atrasada ⚠️'
+            : p.status === 'hoje'
+                ? 'Hoje'
+                : p.status === 'agendada'
+                    ? `Faltam ${p.diasParaDataAlvo} dias`
+                    : (p.dataAlvoBr ? `Agendada para ${p.dataAlvoBr}` : 'Lembrete');
         badge.setAttribute('aria-label', 'Vacina agendada para ser lembrada');
 
         const actions = document.createElement('div');
@@ -79,7 +119,7 @@ export function renderizarLembretes() {
         remover.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            descartarLembrete(p.nome);
+            descartarLembrete(chaveLembrete(p, p.perfilId));
         }, { once: false, passive: false });
         
         actions.appendChild(remover);
@@ -92,14 +132,105 @@ export function renderizarLembretes() {
     });
 }
 
-export function configurarNotificacoes() {
-    if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {
-        window.Capacitor.Plugins.LocalNotifications.requestPermissions().then(permission => {
-            if (permission.display === 'granted') {
-                alert("Permissão concedida! O Android enviará alertas nativos de vacinação.");
+function obterPendenciasTodosPerfis() {
+    const pendencias = [];
+    const titular = obterPerfilTitular();
+    const dependentes = obterDependentesLocais();
+    const perfis = [
+        { id: 'principal', nome: titular.nomeCompleto || 'Titular', dataNascimento: titular.dataNascimento },
+        ...dependentes.map(dep => ({ id: dep.id, nome: dep.nome, dataNascimento: dep.dataNascimento }))
+    ];
+
+    perfis.forEach((perfil) => {
+        const carteiraPerfil = appState.carteira.filter(v => (v.perfilId || 'principal') === perfil.id);
+        const calculadas = montarPendenciasPersonalizadas(CALENDARIO_SUS, carteiraPerfil, perfil.dataNascimento)
+            .filter(v => v.dataAlvoIso)
+            .map(v => ({ ...v, perfilId: perfil.id, perfilNome: perfil.nome }));
+        pendencias.push(...calculadas);
+    });
+
+    return pendencias;
+}
+
+function hashTexto(texto) {
+    let hash = 0;
+    const str = String(texto || '');
+    for (let i = 0; i < str.length; i += 1) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash);
+}
+
+function idNotificacao(item) {
+    return 50000 + (hashTexto(`${item.perfilId}|${item.nome}|${item.dataAlvoIso}`) % 40000);
+}
+
+async function agendarNotificacoesNativas(LocalNotifications) {
+    const pendencias = obterPendenciasTodosPerfis();
+    const agora = new Date();
+    const agendamentos = [];
+
+    pendencias.forEach((item) => {
+        if (!item.dataAlvoIso) return;
+
+        const dataAlvo = new Date(`${item.dataAlvoIso}T09:00:00`);
+        if (Number.isNaN(dataAlvo.getTime())) return;
+
+        const atraso = item.status === 'atrasada';
+        const dataDisparo = atraso ? new Date(agora.getTime() + (2 * 60 * 1000)) : dataAlvo;
+        if (dataDisparo.getTime() <= agora.getTime()) return;
+
+        const body = atraso
+            ? `Dose atrasada há ${item.diasAtraso} dias: ${item.nome} (${item.perfilNome}).`
+            : `Hoje vence ${item.nome} para ${item.perfilNome}.`; 
+
+        agendamentos.push({
+            id: idNotificacao(item),
+            title: atraso ? 'Dose Atrasada ⚠️' : 'Lembrete de Vacina',
+            body,
+            schedule: { at: dataDisparo, allowWhileIdle: true },
+            extra: {
+                perfilId: item.perfilId,
+                vacina: item.nome,
+                dataAlvoIso: item.dataAlvoIso
             }
         });
-    } else {
-        alert("Modo de simulação Web: Lembretes automáticos ativados com base no seu histórico pendente!");
+    });
+
+    const idsAnteriores = JSON.parse(localStorage.getItem(SCHEDULED_IDS_KEY) || '[]');
+    if (idsAnteriores.length > 0) {
+        await LocalNotifications.cancel({ notifications: idsAnteriores.map(id => ({ id })) });
+    }
+
+    if (agendamentos.length > 0) {
+        await LocalNotifications.schedule({ notifications: agendamentos });
+    }
+
+    localStorage.setItem(SCHEDULED_IDS_KEY, JSON.stringify(agendamentos.map(n => n.id)));
+
+    return agendamentos.length;
+}
+
+export async function configurarNotificacoes() {
+    const LocalNotifications = window.Capacitor?.Plugins?.LocalNotifications;
+
+    if (!LocalNotifications) {
+        alert('⚠️ Plugin nativo de notificações não encontrado. Instale @capacitor/local-notifications e rode npx cap sync.');
+        return;
+    }
+
+    try {
+        const permissao = await LocalNotifications.requestPermissions();
+        if (permissao.display !== 'granted') {
+            alert('❌ Permissão de notificações não concedida no Android.');
+            return;
+        }
+
+        const total = await agendarNotificacoesNativas(LocalNotifications);
+        alert(`✅ Permissão concedida. ${total} alertas automáticos foram programados no celular.`);
+    } catch (error) {
+        console.error('Erro ao configurar notificações nativas:', error);
+        alert('❌ Não foi possível configurar alertas nativos agora. Tente novamente.');
     }
 }

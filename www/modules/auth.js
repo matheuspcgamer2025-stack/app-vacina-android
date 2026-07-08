@@ -7,11 +7,21 @@ import {
     signInWithCredential,
     signInWithPopup
 } from './database.js';
+import { salvarPerfilTitular } from './profile.js';
 
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REGEX_CPF = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
 const REGEX_SENHA = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\S]{8,}$/;
 const CHAVE_CONTAS_LOCAIS = 'vacinaapp_contas_locais_v1';
+
+function validarDataNascimento(valor) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(valor || ''))) return false;
+    const data = new Date(`${valor}T00:00:00`);
+    if (Number.isNaN(data.getTime())) return false;
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    return data <= hoje;
+}
 
 function validarIdentificador(valor) {
     if (REGEX_EMAIL.test(valor)) return { valido: true, tipo: 'email' };
@@ -216,11 +226,19 @@ export function inicializarAutentication(onLoginSuccess) {
     // ==========================================
     registerForm?.addEventListener('submit', async function(e) {
         e.preventDefault();
+        const nomeCompleto = document.getElementById('register-nome-completo').value.trim();
+        const dataNascimento = document.getElementById('register-data-nascimento').value;
+        const sexo = document.querySelector('input[name="register-sexo"]:checked')?.value;
         const id = document.getElementById('register-identificador').value.trim();
         const senha = document.getElementById('register-senha').value;
         const conf = document.getElementById('register-confirmar-senha').value;
         
         const validacao = validarIdentificador(id);
+        if (!nomeCompleto || !validarDataNascimento(dataNascimento) || (sexo !== 'Feminino' && sexo !== 'Masculino')) {
+            alert('❌ Preencha nome completo, data de nascimento válida e selecione sexo.');
+            return;
+        }
+
         if (!validacao.valido || !validarSenhaForte(senha) || senha !== conf) {
             alert("❌ Verifique os campos! As senhas devem ser iguais e seguras.");
             return;
@@ -230,12 +248,14 @@ export function inicializarAutentication(onLoginSuccess) {
 
         try {
             await createUserWithEmailAndPassword(auth, emailFirebase, senha);
+            salvarPerfilTitular({ nomeCompleto, dataNascimento, sexo });
             alert("🎉 Conta criada com sucesso com segurança na nuvem!");
             salvarContaLocal(id, senha);
             concluirLogin(id, auth.currentUser?.email, screenRegister, appMain, onLoginSuccess);
         } catch (error) {
             console.error("Erro no cadastro:", error);
             if (error?.code === 'auth/network-request-failed') {
+                salvarPerfilTitular({ nomeCompleto, dataNascimento, sexo });
                 salvarContaLocal(id, senha);
                 concluirLogin(id, null, screenRegister, appMain, onLoginSuccess);
                 alert('⚠️ Sem conexão com Firebase. Conta salva localmente neste dispositivo e login realizado.');

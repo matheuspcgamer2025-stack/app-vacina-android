@@ -80,6 +80,27 @@
             <h2>Criar Nova Conta</h2>
             <form id="register-form">
                 <div class="form-group">
+                    <label for="register-nome-completo">Nome Completo</label>
+                    <input type="text" id="register-nome-completo" placeholder="Digite seu nome completo" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-data-nascimento">Data de Nascimento</label>
+                    <input type="date" id="register-data-nascimento" required>
+                </div>
+                <div class="form-group">
+                    <label>Sexo</label>
+                    <div class="gender-options">
+                        <label class="gender-option" for="register-sexo-feminino">
+                            <input type="radio" id="register-sexo-feminino" name="register-sexo" value="Feminino" required>
+                            Feminino
+                        </label>
+                        <label class="gender-option" for="register-sexo-masculino">
+                            <input type="radio" id="register-sexo-masculino" name="register-sexo" value="Masculino" required>
+                            Masculino
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label for="register-identificador">Definir CPF ou E-mail</label>
                     <input type="text" id="register-identificador" placeholder="Digite o CPF ou e-mail para a conta"
                         required>
@@ -330,16 +351,14 @@
                             <input type="text" id="dependente-nome" placeholder="Nome completo" required>
                         </div>
                         <div class="form-group">
-                            <label for="dependente-idade">Idade</label>
-                            <input type="number" id="dependente-idade" min="0" max="120" placeholder="Ex: 7">
+                            <label for="dependente-data-nascimento">Data de Nascimento</label>
+                            <input type="date" id="dependente-data-nascimento" required>
                         </div>
                         <div class="form-group">
                             <label for="dependente-sexo">Sexo</label>
                             <select id="dependente-sexo">
-                                <option value="Não informado">Não informado</option>
                                 <option value="Feminino">Feminino</option>
                                 <option value="Masculino">Masculino</option>
-                                <option value="Outro">Outro</option>
                             </select>
                         </div>
                         <div class="modal-actions">
@@ -505,6 +524,7 @@
                 </div>
                 <div class="card">
                     <h3>Meus Lembretes Ativos</h3>
+                    <div id="reminders-today-banner" class="today-vax-banner hidden"></div>
                     <ul id="reminders-list" class="reminder-items"></ul>
                 </div>
             </section>
