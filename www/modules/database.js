@@ -46,6 +46,72 @@ export const appState = {
     carteira: [] 
 };
 
+const CHAVE_DEPENDENTES = 'app_dependentes';
+
+function validarDataIso(valor) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(valor || ''))) return false;
+    const data = new Date(`${valor}T00:00:00`);
+    return !Number.isNaN(data.getTime());
+}
+
+function normalizarSexoDependente(valor) {
+    const sexo = String(valor || '').trim();
+    return sexo === 'Masculino' ? 'Masculino' : 'Feminino';
+}
+
+function normalizarDependenteParaPersistencia(dep) {
+    const nome = String(dep?.nome || '').trim();
+    const dataNascimento = String(dep?.dataNascimento || '').trim();
+    const dataNascimentoValida = validarDataIso(dataNascimento) ? dataNascimento : null;
+
+    if (!nome || !dataNascimentoValida) return null;
+
+    return {
+        id: dep?.id || `dep_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        nome,
+        dataNascimento: dataNascimentoValida,
+        sexo: normalizarSexoDependente(dep?.sexo),
+        carteira: Array.isArray(dep?.carteira) ? dep.carteira : []
+    };
+}
+
+export function obterDependentesLocais() {
+    try {
+        const lista = JSON.parse(localStorage.getItem(CHAVE_DEPENDENTES) || '[]');
+        if (!Array.isArray(lista)) return [];
+        return lista
+            .map(normalizarDependenteParaPersistencia)
+            .filter(Boolean);
+    } catch (_) {
+        return [];
+    }
+}
+
+export function salvarDependentesLocais(dependentes) {
+    const listaNormalizada = Array.isArray(dependentes)
+        ? dependentes.map(normalizarDependenteParaPersistencia).filter(Boolean)
+        : [];
+
+    localStorage.setItem(CHAVE_DEPENDENTES, JSON.stringify(listaNormalizada));
+    return listaNormalizada;
+}
+
+export function salvarDependenteLocal(dependente) {
+    const depNormalizado = normalizarDependenteParaPersistencia(dependente);
+    if (!depNormalizado) {
+        throw new Error('Dependente inválido: informe nome e data de nascimento válidos.');
+    }
+
+    const dependentes = obterDependentesLocais();
+    const indice = dependentes.findIndex(d => d.id === depNormalizado.id);
+
+    if (indice >= 0) dependentes[indice] = depNormalizado;
+    else dependentes.push(depNormalizado);
+
+    salvarDependentesLocais(dependentes);
+    return depNormalizado;
+}
+
 // Lista de vacinas do SUS totalmente organizada e limpa
 export const CALENDARIO_SUS = [
     { nome: "BCG", faixa: "criança", dose: "Dose única", recomendacao: "Ao nascer", protege: "Formas graves de tuberculose", reacoes: "Cicatriz local, vermelhidão", via: "Intradérmica" },

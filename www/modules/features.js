@@ -1,22 +1,8 @@
-import { appState, auth, db } from './database.js';
+import { appState, auth, db, obterDependentesLocais, salvarDependentesLocais, salvarDependenteLocal } from './database.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
 import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 import { formatarIdadeHumana } from './profile.js';
 import { formatIsoToDisplay, parseDateToIso } from './date-input.js';
-
-const CHAVE_DEPENDENTES = 'app_dependentes';
-
-function obterDependentesLocais() {
-    try {
-        return JSON.parse(localStorage.getItem(CHAVE_DEPENDENTES) || '[]');
-    } catch (_) {
-        return [];
-    }
-}
-
-function salvarDependentesLocais(dependentes) {
-    localStorage.setItem(CHAVE_DEPENDENTES, JSON.stringify(dependentes));
-}
 
 function normalizarDependente(dep) {
     const nome = String(dep?.nome || '').trim();
@@ -31,7 +17,8 @@ function normalizarDependente(dep) {
         id: dep?.id || `dep_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         nome,
         dataNascimento: dataNascimentoValida,
-        sexo
+        sexo,
+        carteira: Array.isArray(dep?.carteira) ? dep.carteira : []
     };
 }
 
@@ -138,7 +125,7 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
     }
 
     async function persistirDependentes() {
-        salvarDependentesLocais(dependentes);
+        dependentes = salvarDependentesLocais(dependentes);
         if (auth.currentUser?.uid) {
             await salvarDependentesNuvem(auth.currentUser.uid, dependentes);
         }
@@ -253,6 +240,9 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
         const indiceExistente = dependentes.findIndex(d => d.id === depNormalizado.id);
         if (indiceExistente >= 0) dependentes[indiceExistente] = depNormalizado;
         else dependentes.push(depNormalizado);
+
+        // Mantém persistência de um dependente por vez com carteira inicial []
+        salvarDependenteLocal(depNormalizado);
 
         await persistirDependentes();
         renderizarSelectDependentes();

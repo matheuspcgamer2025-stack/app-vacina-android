@@ -314,10 +314,17 @@ export async function compartilharHistoricoVacinas() {
     try {
         // Gera o PDF com o histórico
         const pdfBlob = await gerarPDFHistorico(vacinasFiltradas);
+        if (!pdfBlob) throw new Error('Falha ao montar arquivo PDF.');
         const arquivo = new File([pdfBlob], "Historico_Vacinacao.pdf", { type: "application/pdf" });
 
         // Verifica se o navegador suporta Web Share API
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [arquivo] })) {
+        const podeCompartilharArquivo = Boolean(
+            navigator.share
+            && navigator.canShare
+            && navigator.canShare({ files: [arquivo] })
+        );
+
+        if (podeCompartilharArquivo) {
             // Compartilha usando a API nativa do Android
             await navigator.share({
                 title: "VacinaApp - Histórico de Vacinação",
@@ -343,6 +350,23 @@ export async function compartilharHistoricoVacinas() {
             alert("❌ Erro ao gerar o PDF. Tente novamente.");
         }
     }
+}
+
+function gerarBlobTextoFallback(vacinasFiltradas) {
+    const linhas = [
+        'VacinaApp - Historico de Vacinacao',
+        `Gerado em ${new Date().toLocaleString('pt-BR')}`,
+        '',
+        ...vacinasFiltradas.map((vax) => {
+            const dataFormatada = new Date(`${vax.data}T00:00:00`).toLocaleDateString('pt-BR');
+            const reforco = vax.proximaDose
+                ? ` | Reforco: ${new Date(`${vax.proximaDose}T00:00:00`).toLocaleDateString('pt-BR')}`
+                : '';
+            return `- ${vax.nome} | Data: ${dataFormatada} | Local: ${vax.local} | Lote: ${vax.lote}${reforco}`;
+        })
+    ];
+
+    return new Blob([linhas.join('\n')], { type: 'text/plain;charset=utf-8' });
 }
 
 // ==========================================================================
@@ -460,30 +484,42 @@ function gerarPDFHistorico(vacinasFiltradas) {
         </html>
     `;
 
-    // Converte HTML para Blob usando html2pdf (via callback)
+    // Converte HTML para Blob usando html2pdf
     return new Promise((resolve) => {
+        const html2pdfGlobal = window.html2pdf;
+        if (typeof html2pdfGlobal !== 'function') {
+            resolve(gerarBlobTextoFallback(vacinasFiltradas));
+            return;
+        }
+
+        const bodyMatch = htmlConteudo.match(/<body>[\s\S]*<\/body>/);
         const element = document.createElement('div');
-        element.innerHTML = htmlConteudo.match(/<body>[\s\S]*<\/body>/)[0].replace(/<\/?body>/g, '');
-        
+        element.innerHTML = bodyMatch
+            ? bodyMatch[0].replace(/<\/?body>/g, '')
+            : htmlConteudo;
+
         const opt = {
             margin: 5,
-            filename: 'Histórico_Vacinação.pdf',
+            filename: 'Historico_Vacinacao.pdf',
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2 },
             jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
         };
 
-        html2pdf()
+        html2pdfGlobal()
             .set(opt)
             .from(element)
             .outputPdf('blob')
-            .then(pdf => resolve(pdf));
-    }).catch(() => {
-        // Fallback se html2pdf não funcionar
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        return canvas.toBlob(blob => blob);
+            .then((pdf) => {
+                if (pdf instanceof Blob) {
+                    resolve(pdf);
+                    return;
+                }
+
+                resolve(gerarBlobTextoFallback(vacinasFiltradas));
+            })
+            .catch(() => {
+                resolve(gerarBlobTextoFallback(vacinasFiltradas));
+            });
     });
 }

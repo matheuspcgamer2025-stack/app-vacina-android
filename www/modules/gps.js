@@ -41,16 +41,35 @@ function renderizarMensagem(container, html) {
     container.innerHTML = html;
 }
 
+function construirDestinoMapa(posto) {
+    return posto.lat && posto.lng
+        ? `${posto.lat},${posto.lng}`
+        : `${posto.nome} ${posto.endereco}`;
+}
+
+async function abrirRotaAutomatica(posto) {
+    const destino = construirDestinoMapa(posto);
+
+    try {
+        const localizacao = await obterLocalizacaoAtual();
+        const origem = `${localizacao.lat},${localizacao.lng}`;
+        const urlComOrigem = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origem)}&destination=${encodeURIComponent(destino)}&travelmode=driving`;
+        window.open(urlComOrigem, '_blank');
+        return;
+    } catch (error) {
+        console.warn('Não foi possível obter localização para rota automática:', error);
+    }
+
+    const urlFallback = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destino)}&travelmode=driving`;
+    window.open(urlFallback, '_blank');
+}
+
 function renderizarPostos(container, postos) {
     limparResultados(container);
 
     postos.forEach(posto => {
         const cardPosto = document.createElement('div');
         cardPosto.style.cssText = "background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #0275d8; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); animation: fadeIn 0.2s ease-in-out;";
-
-        const destino = posto.lat && posto.lng
-            ? `${posto.lat},${posto.lng}`
-            : `${posto.nome} ${posto.endereco}`;
 
         cardPosto.innerHTML = `
             <h4 style="margin-bottom: 5px; color: #333;">🏢 ${posto.nome}</h4>
@@ -59,10 +78,25 @@ function renderizarPostos(container, postos) {
             <p style="font-size: 13px; color: #666; margin-bottom: 3px;"><strong>📞 Telefone:</strong> ${posto.telefone || 'Não informado'}</p>
             <p style="font-size: 13px; color: #0275d8; font-weight: bold; margin-bottom: 8px;">⏳ Horário: ${posto.funcionamento || 'Não informado'}</p>
             ${posto.vacinas ? `<p style="font-size: 13px; color: #444; margin-bottom: 8px;"><strong>💉 Vacinas em estoque:</strong> ${posto.vacinas}</p>` : ''}
-            <a href="https://google.com/maps/dir/?api=1&destination=${encodeURIComponent(destino)}" target="_blank" style="display: block; text-align: center; background: #0275d8; color: white; padding: 8px; border-radius: 5px; text-decoration: none; font-size: 13px; font-weight: bold;">
-                🚗 Ver no GPS
-            </a>
+            <button type="button" class="btn-ver-rota" style="display: block; width: 100%; text-align: center; background: #0275d8; color: white; padding: 8px; border-radius: 5px; text-decoration: none; font-size: 13px; font-weight: bold; border: none; cursor: pointer;">
+                🚗 Ver rota
+            </button>
         `;
+
+        const btnVerRota = cardPosto.querySelector('.btn-ver-rota');
+        btnVerRota?.addEventListener('click', async () => {
+            btnVerRota.disabled = true;
+            const textoOriginal = btnVerRota.textContent;
+            btnVerRota.textContent = 'Abrindo rota...';
+
+            try {
+                await abrirRotaAutomatica(posto);
+            } finally {
+                btnVerRota.disabled = false;
+                btnVerRota.textContent = textoOriginal;
+            }
+        });
+
         container.appendChild(cardPosto);
     });
 }
