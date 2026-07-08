@@ -7,6 +7,7 @@ import {
     getAuth, 
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword,
+    sendPasswordResetEmail,
     GoogleAuthProvider,
     signInWithCredential,
     signInWithPopup
@@ -31,6 +32,7 @@ export const auth = getAuth(app);
 export { 
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword,
+    sendPasswordResetEmail,
     GoogleAuthProvider,
     signInWithCredential,
     signInWithPopup

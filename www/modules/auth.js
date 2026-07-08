@@ -3,11 +3,13 @@ import {
     auth, 
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword,
+    sendPasswordResetEmail,
     GoogleAuthProvider,
     signInWithCredential,
     signInWithPopup
 } from './database.js';
 import { salvarPerfilTitular } from './profile.js';
+import { parseDateToIso } from './date-input.js';
 
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REGEX_CPF = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
@@ -180,6 +182,43 @@ export function inicializarAutentication(onLoginSuccess) {
         screenLogin.classList.remove('hidden');
     });
 
+    // Recuperação de senha por e-mail
+    document.getElementById('link-esqueci-senha')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const identificador = document.getElementById('login-identificador')?.value?.trim() || '';
+
+        if (!REGEX_EMAIL.test(identificador)) {
+            alert('❌ Para recuperar senha, informe um e-mail válido no campo de login.');
+            return;
+        }
+
+        const email = identificador.toLowerCase();
+
+        try {
+            await sendPasswordResetEmail(auth, email);
+            alert(`📩 Enviamos um link de recuperação para ${email}. Verifique sua caixa de entrada.`);
+        } catch (error) {
+            const codigo = error?.code || '';
+
+            if (codigo === 'auth/user-not-found') {
+                alert('❌ Não encontramos uma conta com este e-mail.');
+                return;
+            }
+
+            if (codigo === 'auth/invalid-email') {
+                alert('❌ E-mail inválido para recuperação de senha.');
+                return;
+            }
+
+            if (codigo === 'auth/network-request-failed') {
+                alert('❌ Falha de rede ao enviar recuperação. Verifique sua conexão.');
+                return;
+            }
+
+            alert('❌ Não foi possível enviar o e-mail de recuperação agora. Tente novamente.');
+        }
+    });
+
     // ==========================================
     // LOGIN REAL NO FIREBASE AUTHENTICATION
     // ==========================================
@@ -227,8 +266,10 @@ export function inicializarAutentication(onLoginSuccess) {
     registerForm?.addEventListener('submit', async function(e) {
         e.preventDefault();
         const nomeCompleto = document.getElementById('register-nome-completo').value.trim();
-        const dataNascimento = document.getElementById('register-data-nascimento').value;
+        const dataNascimentoDigitada = document.getElementById('register-data-nascimento').value;
+        const dataNascimento = parseDateToIso(dataNascimentoDigitada);
         const sexo = document.querySelector('input[name="register-sexo"]:checked')?.value;
+        const aceitouTermos = document.getElementById('register-aceite-termos')?.checked === true;
         const id = document.getElementById('register-identificador').value.trim();
         const senha = document.getElementById('register-senha').value;
         const conf = document.getElementById('register-confirmar-senha').value;
@@ -241,6 +282,11 @@ export function inicializarAutentication(onLoginSuccess) {
 
         if (!validacao.valido || !validarSenhaForte(senha) || senha !== conf) {
             alert("❌ Verifique os campos! As senhas devem ser iguais e seguras.");
+            return;
+        }
+
+        if (!aceitouTermos) {
+            alert('❌ Para criar a conta, você precisa aceitar os Termos de Uso e a Política de Privacidade.');
             return;
         }
 

@@ -1,5 +1,6 @@
 import { db, appState, auth, CALENDARIO_SUS } from './database.js';
 import { calcularIntervaloDose } from './features.js';
+import { parseDateToIso } from './date-input.js';
 // CORREÇÃO DA IMPORTAÇÃO: Usando a URL completa oficial da Google sem cortes
 import { 
     collection, 
@@ -93,10 +94,15 @@ export function configurarFormularioCarteira(onUpdate) {
         e.preventDefault();
         
         const nomeSelecionado = document.getElementById('vax-nome').value;
-        const dataOriginal = document.getElementById('vax-data').value;
+        const dataOriginal = parseDateToIso(document.getElementById('vax-data').value);
         
         const lote = document.getElementById('vax-lote').value.trim();
         const local = document.getElementById('vax-local').value.trim();
+
+        if (!dataOriginal) {
+            alert('❌ Informe uma data válida no formato dd/mm/aaaa.');
+            return;
+        }
 
         try {
             const { proximaDoseCalculada } = await salvarRegistroVacina({

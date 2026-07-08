@@ -57,6 +57,9 @@
                         </button>
                     </div>
                 </div>
+                <div class="form-group form-inline-link">
+                    <a href="#" id="link-esqueci-senha" class="link-reset-password">Esqueci minha senha</a>
+                </div>
                 <button type="submit" class="btn-primary">Entrar com Segurança</button>
 
                 <div style="height:0.5rem"></div>
@@ -85,7 +88,7 @@
                 </div>
                 <div class="form-group">
                     <label for="register-data-nascimento">Data de Nascimento</label>
-                    <input type="date" id="register-data-nascimento" required>
+                    <input type="text" id="register-data-nascimento" class="typed-date-input" maxlength="10" required>
                 </div>
                 <div class="form-group">
                     <label>Sexo</label>
@@ -132,6 +135,12 @@
                         🔒 Requisitos da Senha: Mínimo 8 caracteres, contendo pelo menos uma letra maiúscula, uma
                         minúscula e um número.
                     </small>
+                </div>
+                <div class="form-group terms-group">
+                    <label class="terms-option" for="register-aceite-termos">
+                        <input type="checkbox" id="register-aceite-termos" required>
+                        <span>Li e aceito os <a href="#" id="link-termos-uso">Termos de Uso</a> e a <a href="#" id="link-politica-privacidade">Política de Privacidade</a>.</span>
+                    </label>
                 </div>
                 <button type="submit" class="btn-success">Cadastrar e Entrar</button>
             </form>
@@ -352,7 +361,7 @@
                         </div>
                         <div class="form-group">
                             <label for="dependente-data-nascimento">Data de Nascimento</label>
-                            <input type="date" id="dependente-data-nascimento" required>
+                            <input type="text" id="dependente-data-nascimento" class="typed-date-input" maxlength="10" required>
                         </div>
                         <div class="form-group">
                             <label for="dependente-sexo">Sexo</label>
@@ -391,7 +400,7 @@
                                 required>
                         </div>
                         <div class="form-group">
-                            <input type="date" id="vax-data" required>
+                            <input type="text" id="vax-data" class="typed-date-input" maxlength="10" required>
                         </div>
                         <button type="submit" class="btn-success">Adicionar à Carteira</button>
                     </form>
@@ -512,6 +521,16 @@
                     <div class="search-box">
                         <input type="text" id="input-busca-local" placeholder="Ex: Centro, Messejana ou CEP">
                         <button id="btn-buscar-posto" class="btn-success btn-search">Buscar</button>
+                    </div>
+                    <div class="search-actions">
+                        <label for="filtro-raio-km" class="radius-label">Raio de busca por localização</label>
+                        <select id="filtro-raio-km" class="radius-select">
+                            <option value="0">Todos os postos</option>
+                            <option value="5">Até 5 km</option>
+                            <option value="10" selected>Até 10 km</option>
+                            <option value="20">Até 20 km</option>
+                        </select>
+                        <button id="btn-ativar-localizacao" class="btn-primary" type="button">📍 Ativar localização e ver postos mais próximos</button>
                     </div>
                     <div id="lista-postos-resultados" class="results-container"></div>
                 </div>

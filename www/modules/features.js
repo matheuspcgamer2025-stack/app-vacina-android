@@ -2,6 +2,7 @@ import { appState, auth, db } from './database.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
 import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 import { formatarIdadeHumana } from './profile.js';
+import { formatIsoToDisplay, parseDateToIso } from './date-input.js';
 
 const CHAVE_DEPENDENTES = 'app_dependentes';
 
@@ -22,7 +23,7 @@ function normalizarDependente(dep) {
     const sexoRaw = String(dep?.sexo || 'Feminino').trim();
     const sexo = sexoRaw === 'Masculino' ? 'Masculino' : 'Feminino';
     const dataNascimento = String(dep?.dataNascimento || '').trim();
-    const dataNascimentoValida = /^\d{4}-\d{2}-\d{2}$/.test(dataNascimento) ? dataNascimento : null;
+    const dataNascimentoValida = parseDateToIso(dataNascimento);
 
     if (!nome) return null;
 
@@ -123,7 +124,7 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
         formDependente.classList.remove('hidden');
         inputDepId.value = dep?.id || '';
         inputDepNome.value = dep?.nome || '';
-        inputDepNascimento.value = dep?.dataNascimento || '';
+        inputDepNascimento.value = dep?.dataNascimento ? formatIsoToDisplay(dep.dataNascimento) : '';
         inputDepSexo.value = dep?.sexo || 'Feminino';
         inputDepNome.focus();
     }
@@ -235,7 +236,7 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
         const depNormalizado = normalizarDependente({
             id: inputDepId.value || undefined,
             nome: inputDepNome.value,
-            dataNascimento: inputDepNascimento.value,
+            dataNascimento: parseDateToIso(inputDepNascimento.value),
             sexo: inputDepSexo.value
         });
 

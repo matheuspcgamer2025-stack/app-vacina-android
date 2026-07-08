@@ -7,7 +7,8 @@ import { inicializarDashboard } from './modules/dashboard.js';
 import { filtrarCalendario } from './modules/calendar.js';
 import { configurarFormularioCarteira, renderizarCarteira, carregarDadosDoFirebase } from './modules/wallet.js';
 import { renderizarLembretes, configurarNotificacoes } from './modules/reminders.js';
-import { buscarEExibirPosto } from './modules/gps.js';
+import { buscarEExibirPosto, ativarLocalizacaoEListarPostosProximos } from './modules/gps.js';
+import { inicializarCamposDataDigitaveis } from './modules/date-input.js';
 
 // 2. MECANISMO DE SAÍDA GARANTIDA DA TELA DE ABERTURA (ZÉ GOTINHA)
 window.addEventListener('load', () => {
@@ -54,11 +55,22 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarCarteira();
     });
 
+    // Permite digitar datas por números (dd/mm/aaaa) com foco por toque no bloco
+    inicializarCamposDataDigitaveis();
+
     // Gerencia o botão de buscar posto de saúde por CEP/Bairro
     const botaoBuscar = document.getElementById('btn-buscar-posto');
     if (botaoBuscar) {
         botaoBuscar.addEventListener('click', () => {
             buscarEExibirPosto();
+        });
+    }
+
+    // Solicita permissão e lista automaticamente os postos mais próximos
+    const botaoLocalizacao = document.getElementById('btn-ativar-localizacao');
+    if (botaoLocalizacao) {
+        botaoLocalizacao.addEventListener('click', () => {
+            ativarLocalizacaoEListarPostosProximos();
         });
     }
 
@@ -153,4 +165,5 @@ function inicializarAccordions() {
 window.filtrarCalendario = filtrarCalendario;
 window.configurarNotificacoes = configurarNotificacoes;
 window.localizarPostoMaisProximo = buscarEExibirPosto;
+window.ativarLocalizacaoEListarPostosProximos = ativarLocalizacaoEListarPostosProximos;
 
