@@ -1,4 +1,5 @@
 import { CALENDARIO_SUS, appState } from './database.js';
+import { registrarVacinaPeloCalendario, carregarDadosDoFirebase } from './wallet.js';
 
 let faixaEtariaAtual = 'criança'; // Guarda a aba ativa para o filtro secundário da busca
 
@@ -85,27 +86,33 @@ function renderizarListaFiltrada(textoPesquisa) {
         // EVENTO 2: Atalho inteligente "Já Tomei"
         const btnTomei = card.querySelector('.btn-ja-tomei');
         if (btnTomei) {
-            btnTomei.addEventListener('click', () => {
+            btnTomei.addEventListener('click', async () => {
                 const nomeVacina = btnTomei.getAttribute('data-nome');
-                
-                // Preenche automaticamente o campo do seletor na aba de Carteira
-                const inputNomeCarteira = document.getElementById('vax-nome');
-                if (inputNomeCarteira) {
-                    // Procura uma opção no select que inclua o nome da vacina clicada
-                    for (let i = 0; i < inputNomeCarteira.options.length; i++) {
-                        if (inputNomeCarteira.options[i].value.includes(nomeVacina)) {
-                            inputNomeCarteira.selectedIndex = i;
-                            break;
-                        }
-                    }
+                if (!nomeVacina) return;
+
+                if (!confirm(`Registrar "${nomeVacina}" como aplicada no perfil atual?`)) {
+                    return;
                 }
 
-                // Redireciona visualmente o usuário para a aba da Carteira de Vacinação
-                const botaoAbaCarteira = document.querySelectorAll(".bottom-nav .nav-item")[2];
-                if (window.mudarAba && botaoAbaCarteira) {
-                    window.mudarAba('wallet', botaoAbaCarteira);
-                    // Rola a página para o formulário de cadastro
-                    document.getElementById('wallet-form')?.scrollIntoView({ behavior: 'smooth' });
+                btnTomei.disabled = true;
+                btnTomei.textContent = 'Salvando...';
+
+                try {
+                    await registrarVacinaPeloCalendario({ nome: nomeVacina });
+                    await carregarDadosDoFirebase();
+                    renderizarListaFiltrada('');
+                    alert('✅ Vacina registrada com sucesso e enviada para o Histórico Oficial na Carteira.');
+
+                    const botaoAbaCarteira = document.querySelectorAll('.bottom-nav .nav-item')[2];
+                    if (window.mudarAba && botaoAbaCarteira) {
+                        window.mudarAba('wallet', botaoAbaCarteira);
+                    }
+                } catch (error) {
+                    console.error('Erro no registro rápido pelo calendário:', error);
+                    alert(`❌ Não foi possível registrar a vacina. ${error?.message || 'Tente novamente.'}`);
+                } finally {
+                    btnTomei.disabled = false;
+                    btnTomei.textContent = '🚀 Já tomei esta vacina';
                 }
             });
         }

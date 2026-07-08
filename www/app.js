@@ -29,7 +29,7 @@ window.addEventListener('load', () => {
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializa os seletores de dependentes e recarrega a aba ao mudar de perfil
     inicializarNovasFuncoes(() => {
-        const botaoAbaCarteira = document.querySelector('.nav-item');
+        const botaoAbaCarteira = document.querySelectorAll('.nav-item')[2];
         if (botaoAbaCarteira) {
             window.mudarAba('wallet', botaoAbaCarteira); 
         }

@@ -285,6 +285,9 @@ body.dark-theme .btn-google {
 
 .btn-password-toggle:hover {
     color: var(--primary);
+    transform: none;
+    box-shadow: none;
+    filter: none;
 }
 
 .btn-password-toggle:focus {
@@ -292,7 +295,9 @@ body.dark-theme .btn-google {
 }
 
 .btn-password-toggle:active {
-    transform: translateY(-50%) scale(0.95);
+    transform: none;
+    box-shadow: none;
+    filter: none;
 }
 
 .btn-password-toggle[aria-pressed="true"] {
@@ -981,6 +986,74 @@ body.dark-theme .emergency-card {
     font-size: 0.875rem;
     line-height: 1.6;
     color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   12. GESTAO DE DEPENDENTES
+   ========================================================================== */
+.dependentes-list {
+    list-style: none;
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    padding: 0;
+}
+
+.dependente-item {
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    background: var(--bg-app);
+}
+
+.dependente-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.dependente-info strong {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.dependente-info span {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+.dependente-actions {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.btn-mini {
+    width: auto;
+    border-radius: 0.6rem;
+    padding: 0.45rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.btn-switch {
+    background: #0275d8;
+}
+
+.btn-edit {
+    background: #5cb85c;
+}
+
+.dependente-empty {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    text-align: center;
+    padding: 0.75rem;
+    border: 1px dashed var(--border-color);
+    border-radius: 0.75rem;
 }
 
 .sus-info-card .accordion-content p {

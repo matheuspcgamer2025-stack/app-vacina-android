@@ -1,24 +1,168 @@
-import { appState } from './database.js';
+import { appState, auth, db } from './database.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+const CHAVE_DEPENDENTES = 'app_dependentes';
+
+function obterDependentesLocais() {
+    try {
+        return JSON.parse(localStorage.getItem(CHAVE_DEPENDENTES) || '[]');
+    } catch (_) {
+        return [];
+    }
+}
+
+function salvarDependentesLocais(dependentes) {
+    localStorage.setItem(CHAVE_DEPENDENTES, JSON.stringify(dependentes));
+}
+
+function normalizarDependente(dep) {
+    const nome = String(dep?.nome || '').trim();
+    const sexo = String(dep?.sexo || 'Não informado').trim() || 'Não informado';
+    const idadeValor = Number(dep?.idade);
+    const idade = Number.isFinite(idadeValor) && idadeValor >= 0 ? idadeValor : null;
+
+    if (!nome) return null;
+
+    return {
+        id: dep?.id || `dep_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        nome,
+        idade,
+        sexo
+    };
+}
+
+async function carregarDependentesNuvem(uid) {
+    const refUsuario = doc(db, 'usuarios', uid);
+    const snap = await getDoc(refUsuario);
+    if (!snap.exists()) return [];
+
+    const data = snap.data();
+    if (!Array.isArray(data?.dependentes)) return [];
+
+    return data.dependentes
+        .map(normalizarDependente)
+        .filter(Boolean);
+}
+
+async function salvarDependentesNuvem(uid, dependentes) {
+    const refUsuario = doc(db, 'usuarios', uid);
+    await setDoc(refUsuario, {
+        usuarioUid: uid,
+        usuarioEmail: auth.currentUser?.email || null,
+        dependentes,
+        atualizadoEm: new Date().toISOString()
+    }, { merge: true });
+}
 
 export function inicializarNovasFuncoes(onUpdateCallback) {
-    
-    // ==========================================
-    // 1. GERENCIAMENTO DE DEPENDENTES (FAMÍLIA)
-    // ==========================================
+
     const selectDep = document.getElementById('select-dependente');
     const btnAddDep = document.getElementById('btn-add-dependente');
     const btnRemoveDep = document.getElementById('btn-remove-dependente');
+    const dependentesList = document.getElementById('dependentes-list');
+    const formDependente = document.getElementById('dependente-form');
+    const inputDepId = document.getElementById('dependente-id');
+    const inputDepNome = document.getElementById('dependente-nome');
+    const inputDepIdade = document.getElementById('dependente-idade');
+    const inputDepSexo = document.getElementById('dependente-sexo');
+    const btnCancelarEdicao = document.getElementById('btn-cancelar-dependente');
 
-    // Carrega dependentes já salvos no dispositivo
-    const dependentesSalvos = JSON.parse(localStorage.getItem('app_dependentes')) || [];
-    dependentesSalvos.forEach(dep => {
-        const opt = document.createElement('option');
-        opt.value = dep.id;
-        opt.innerText = `👶 ${dep.nome}`;
-        selectDep?.appendChild(opt);
-    });
+    let dependentes = obterDependentesLocais();
 
-    // Função auxiliar para atualizar visibilidade do botão remover
+    function renderizarSelectDependentes() {
+        if (!selectDep) return;
+
+        const valorAtual = selectDep.value || appState.perfilAtual || 'principal';
+        selectDep.innerHTML = '<option value="principal">Minha Carteira (Titular)</option>';
+
+        dependentes.forEach(dep => {
+            const opt = document.createElement('option');
+            opt.value = dep.id;
+            opt.innerText = `👶 ${dep.nome}`;
+            selectDep.appendChild(opt);
+        });
+
+        const existeValor = valorAtual === 'principal' || dependentes.some(d => d.id === valorAtual);
+        selectDep.value = existeValor ? valorAtual : 'principal';
+        appState.perfilAtual = selectDep.value;
+    }
+
+    function renderizarListaDependentes() {
+        if (!dependentesList) return;
+        dependentesList.innerHTML = '';
+
+        if (dependentes.length === 0) {
+            dependentesList.innerHTML = '<li class="dependente-empty">Nenhum dependente cadastrado ainda.</li>';
+            return;
+        }
+
+        dependentes.forEach(dep => {
+            const item = document.createElement('li');
+            item.className = 'dependente-item';
+            item.innerHTML = `
+                <div class="dependente-info">
+                    <strong>${dep.nome}</strong>
+                    <span>${dep.idade ?? 'Idade não informada'} ${dep.idade === null ? '' : 'anos'} • ${dep.sexo}</span>
+                </div>
+                <div class="dependente-actions">
+                    <button type="button" class="btn-mini btn-switch" data-action="switch" data-id="${dep.id}">Carteira</button>
+                    <button type="button" class="btn-mini btn-edit" data-action="edit" data-id="${dep.id}">Editar ✏️</button>
+                </div>
+            `;
+
+            dependentesList.appendChild(item);
+        });
+    }
+
+    function abrirFormulario(dep = null) {
+        if (!formDependente) return;
+        formDependente.classList.remove('hidden');
+        inputDepId.value = dep?.id || '';
+        inputDepNome.value = dep?.nome || '';
+        inputDepIdade.value = dep?.idade ?? '';
+        inputDepSexo.value = dep?.sexo || 'Não informado';
+        inputDepNome.focus();
+    }
+
+    function fecharFormulario() {
+        if (!formDependente) return;
+        formDependente.classList.add('hidden');
+        formDependente.reset();
+        inputDepId.value = '';
+        inputDepSexo.value = 'Não informado';
+    }
+
+    async function persistirDependentes() {
+        salvarDependentesLocais(dependentes);
+        if (auth.currentUser?.uid) {
+            await salvarDependentesNuvem(auth.currentUser.uid, dependentes);
+        }
+    }
+
+    async function sincronizarDependentes() {
+        const locais = obterDependentesLocais();
+        dependentes = locais;
+
+        if (auth.currentUser?.uid) {
+            try {
+                const nuvem = await carregarDependentesNuvem(auth.currentUser.uid);
+                if (nuvem.length > 0 || locais.length === 0) {
+                    dependentes = nuvem;
+                    salvarDependentesLocais(dependentes);
+                } else {
+                    await salvarDependentesNuvem(auth.currentUser.uid, dependentes);
+                }
+            } catch (error) {
+                console.error('Erro ao sincronizar dependentes na nuvem:', error);
+            }
+        }
+
+        renderizarSelectDependentes();
+        renderizarListaDependentes();
+        atualizarBotaoRemover();
+    }
+
     function atualizarBotaoRemover() {
         const valorSelecionado = selectDep?.value;
         if (btnRemoveDep) {
@@ -27,49 +171,29 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
     }
 
     btnAddDep?.addEventListener('click', () => {
-        const nomeDep = prompt("Digite o nome do dependente (Filho, Cônjuge ou Idoso):");
-        if (!nomeDep || nomeDep.trim() === "") return;
-
-        const novoDep = { id: 'dep_' + Date.now(), nome: nomeDep.trim() };
-        dependentesSalvos.push(novoDep);
-        localStorage.setItem('app_dependentes', JSON.stringify(dependentesSalvos));
-
-        const opt = document.createElement('option');
-        opt.value = novoDep.id;
-        opt.innerText = `👶 ${novoDep.nome}`;
-        selectDep?.appendChild(opt);
-        selectDep.value = novoDep.id;
-        
-        // Altera a visão para o novo perfil
-        appState.perfilAtual = novoDep.id;
-        atualizarBotaoRemover();
-        onUpdateCallback();
+        abrirFormulario();
     });
 
-    btnRemoveDep?.addEventListener('click', () => {
+    btnRemoveDep?.addEventListener('click', async () => {
         const idSelecionado = selectDep?.value;
         if (!idSelecionado || idSelecionado === 'principal') {
             alert("❌ Você não pode remover o perfil titular!");
             return;
         }
 
-        const nomeDependente = dependentesSalvos.find(d => d.id === idSelecionado)?.nome;
+        const nomeDependente = dependentes.find(d => d.id === idSelecionado)?.nome;
         if (!confirm(`Deseja realmente remover o perfil de "${nomeDependente}"? Todas as vacinas associadas também serão apagadas.`)) {
             return;
         }
 
-        // Remove do array de dependentes
-        const indice = dependentesSalvos.findIndex(d => d.id === idSelecionado);
+        const indice = dependentes.findIndex(d => d.id === idSelecionado);
         if (indice !== -1) {
-            dependentesSalvos.splice(indice, 1);
-            localStorage.setItem('app_dependentes', JSON.stringify(dependentesSalvos));
+            dependentes.splice(indice, 1);
+            await persistirDependentes();
+            renderizarSelectDependentes();
+            renderizarListaDependentes();
 
-            // Remove a opção do select
-            const opcao = selectDep?.querySelector(`option[value="${idSelecionado}"]`);
-            if (opcao) opcao.remove();
-
-            // Volta para o perfil principal
-            selectDep.value = 'principal';
+            if (selectDep) selectDep.value = 'principal';
             appState.perfilAtual = 'principal';
 
             alert(`✅ Perfil de "${nomeDependente}" removido com sucesso!`);
@@ -78,15 +202,74 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
         }
     });
 
+    dependentesList?.addEventListener('click', (event) => {
+        const alvo = event.target;
+        if (!(alvo instanceof HTMLElement)) return;
+
+        const action = alvo.getAttribute('data-action');
+        const depId = alvo.getAttribute('data-id');
+        if (!action || !depId) return;
+
+        const dep = dependentes.find(d => d.id === depId);
+        if (!dep) return;
+
+        if (action === 'switch') {
+            if (selectDep) selectDep.value = dep.id;
+            appState.perfilAtual = dep.id;
+            atualizarBotaoRemover();
+            onUpdateCallback();
+            return;
+        }
+
+        if (action === 'edit') {
+            abrirFormulario(dep);
+        }
+    });
+
+    formDependente?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const depNormalizado = normalizarDependente({
+            id: inputDepId.value || undefined,
+            nome: inputDepNome.value,
+            idade: inputDepIdade.value,
+            sexo: inputDepSexo.value
+        });
+
+        if (!depNormalizado) {
+            alert('❌ Informe um nome válido para o dependente.');
+            return;
+        }
+
+        const indiceExistente = dependentes.findIndex(d => d.id === depNormalizado.id);
+        if (indiceExistente >= 0) dependentes[indiceExistente] = depNormalizado;
+        else dependentes.push(depNormalizado);
+
+        await persistirDependentes();
+        renderizarSelectDependentes();
+        renderizarListaDependentes();
+        if (selectDep) selectDep.value = depNormalizado.id;
+        appState.perfilAtual = depNormalizado.id;
+        atualizarBotaoRemover();
+        fecharFormulario();
+        onUpdateCallback();
+    });
+
+    btnCancelarEdicao?.addEventListener('click', () => {
+        fecharFormulario();
+    });
+
     selectDep?.addEventListener('change', (e) => {
         appState.perfilAtual = e.target.value;
         atualizarBotaoRemover();
         onUpdateCallback();
     });
 
-    // Inicializa o estado do botão remover
-    atualizarBotaoRemover();
+    onAuthStateChanged(auth, () => {
+        sincronizarDependentes();
+    });
 
+    sincronizarDependentes();
 }
 
 // ==========================================

@@ -1,4 +1,4 @@
-import { db, appState, auth } from './database.js';
+import { db, appState, auth, CALENDARIO_SUS } from './database.js';
 import { calcularIntervaloDose } from './features.js';
 // CORREÇÃO DA IMPORTAÇÃO: Usando a URL completa oficial da Google sem cortes
 import { 
@@ -11,6 +11,70 @@ import {
     doc 
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
+function listarVacinasUnicas() {
+    const nomes = new Set();
+    CALENDARIO_SUS.forEach(vax => {
+        if (vax?.nome) nomes.add(vax.nome);
+    });
+    return Array.from(nomes).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+}
+
+function preencherSelectVacinas(selectEl) {
+    if (!selectEl) return;
+
+    const valorAnterior = selectEl.value;
+    selectEl.innerHTML = '<option value="" disabled selected>Escolha a Vacina...</option>';
+
+    listarVacinasUnicas().forEach(nome => {
+        const option = document.createElement('option');
+        option.value = nome;
+        option.textContent = nome;
+        selectEl.appendChild(option);
+    });
+
+    if (valorAnterior && Array.from(selectEl.options).some(op => op.value === valorAnterior)) {
+        selectEl.value = valorAnterior;
+    }
+}
+
+async function salvarRegistroVacina({ nome, lote, local, data, perfilId }) {
+    const proximaDoseCalculada = calcularIntervaloDose(nome, data);
+    const emailAtual = auth.currentUser?.email || null;
+    const uidAtual = auth.currentUser?.uid || null;
+
+    const novaVacina = {
+        usuarioId: emailAtual || appState.usuarioLogado || 'anonimo',
+        usuarioUid: uidAtual,
+        perfilId: perfilId || appState.perfilAtual || 'principal',
+        nome,
+        lote,
+        local,
+        data,
+        proximaDose: proximaDoseCalculada || null,
+        dataRegistro: new Date().toISOString()
+    };
+
+    await addDoc(collection(db, 'vacinas'), novaVacina);
+    return { proximaDoseCalculada };
+}
+
+export async function registrarVacinaPeloCalendario(vacina) {
+    const hoje = new Date().toISOString().split('T')[0];
+    const nome = String(vacina?.nome || '').trim();
+    if (!nome) {
+        throw new Error('Nome da vacina inválido para registro rápido.');
+    }
+
+    const dataAplicada = vacina?.dataAplicada || hoje;
+    await salvarRegistroVacina({
+        nome,
+        lote: `AUTO-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`,
+        local: 'Registro rápido no calendário',
+        data: dataAplicada,
+        perfilId: appState.perfilAtual || 'principal'
+    });
+}
+
 
 // ==========================================================================
 // 1. CONFIGURAÇÃO E ENVIO DE REGISTROS PARA A NUVEM
@@ -22,34 +86,26 @@ export function configurarFormularioCarteira(onUpdate) {
     const novoForm = form.cloneNode(true);
     form.parentNode.replaceChild(novoForm, form);
 
+    const selectVacina = document.getElementById('vax-nome');
+    preencherSelectVacinas(selectVacina);
+
     novoForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const nomeSelecionado = document.getElementById('vax-nome').value;
         const dataOriginal = document.getElementById('vax-data').value;
         
-        // Calcula se a vacina selecionada exige um reforço programado
-        const proximaDoseCalculada = calcularIntervaloDose(nomeSelecionado, dataOriginal);
-
-        // Monta o objeto com as chaves estruturadas para o Firestore
-        const emailAtual = auth.currentUser?.email || null;
-        const uidAtual = auth.currentUser?.uid || null;
-
-        const novaVacina = {
-            usuarioId: emailAtual || appState.usuarioLogado || "anonimo", // Vincula ao login ativo
-            usuarioUid: uidAtual, // Vinculo primario para regras seguras no Firestore
-            perfilId: appState.perfilAtual || "principal",   // Vincula ao perfil/dependente ativo
-            nome: nomeSelecionado,
-            lote: document.getElementById('vax-lote').value.trim(),
-            local: document.getElementById('vax-local').value.trim(),
-            data: dataOriginal,
-            proximaDose: proximaDoseCalculada || null,
-            dataRegistro: new Date().toISOString()
-        };
+        const lote = document.getElementById('vax-lote').value.trim();
+        const local = document.getElementById('vax-local').value.trim();
 
         try {
-            // Salva o documento de forma definitiva na coleção "vacinas" do Firebase
-            await addDoc(collection(db, "vacinas"), novaVacina);
+            const { proximaDoseCalculada } = await salvarRegistroVacina({
+                nome: nomeSelecionado,
+                lote,
+                local,
+                data: dataOriginal,
+                perfilId: appState.perfilAtual || 'principal'
+            });
 
             if (proximaDoseCalculada) {
                 const dataBr = new Date(proximaDoseCalculada + 'T00:00:00').toLocaleDateString('pt-BR');

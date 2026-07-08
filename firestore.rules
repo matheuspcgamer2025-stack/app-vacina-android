@@ -45,5 +45,15 @@ service cloud.firestore {
       allow read, update, delete: if isSignedIn()
         && isOwner(resource.data);
     }
+
+    match /usuarios/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+
+      allow create, update: if isSignedIn()
+        && request.auth.uid == uid
+        && (!('dependentes' in request.resource.data) || request.resource.data.dependentes is list);
+
+      allow delete: if false;
+    }
   }
 }
