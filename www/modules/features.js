@@ -60,6 +60,14 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
 
     let dependentes = obterDependentesLocais();
 
+    function notificarTrocaPerfil(perfilId) {
+        document.dispatchEvent(new CustomEvent('app:perfil-trocado', {
+            detail: {
+                perfilId: perfilId || appState.perfilAtual || 'principal'
+            }
+        }));
+    }
+
     function renderizarSelectDependentes() {
         if (!selectDep) return;
 
@@ -208,6 +216,7 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
             if (selectDep) selectDep.value = dep.id;
             appState.perfilAtual = dep.id;
             atualizarBotaoRemover();
+            notificarTrocaPerfil(dep.id);
             onUpdateCallback();
             return;
         }
@@ -251,6 +260,7 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
         appState.perfilAtual = depNormalizado.id;
         atualizarBotaoRemover();
         fecharFormulario();
+        notificarTrocaPerfil(depNormalizado.id);
         onUpdateCallback();
     });
 
@@ -261,6 +271,7 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
     selectDep?.addEventListener('change', (e) => {
         appState.perfilAtual = e.target.value;
         atualizarBotaoRemover();
+        notificarTrocaPerfil(e.target.value);
         onUpdateCallback();
     });
 

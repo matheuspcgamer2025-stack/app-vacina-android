@@ -235,10 +235,22 @@
                 <button id="btn-menu-hamburger" class="btn-icon">☰</button>
             </div>
             <div class="header-right">
+                <button id="btn-dashboard-notifications" class="btn-icon btn-notification" aria-label="Abrir central de notificações">
+                    <span>🔔</span>
+                    <span id="notification-dot" class="notification-dot hidden"></span>
+                </button>
                 <!-- APENAS o botão de mudar de tema na ponta direita -->
                 <button id="main-theme-toggle" class="btn-theme-toggle">🌓</button>
             </div>
         </header>
+
+        <aside id="dashboard-notification-panel" class="notification-panel hidden">
+            <div class="notification-panel-header">
+                <h3>🔔 Central de Notificações</h3>
+                <button id="btn-close-notifications" class="btn-icon" aria-label="Fechar notificações">✕</button>
+            </div>
+            <ul id="dashboard-notification-list" class="notification-list"></ul>
+        </aside>
 
 
         <!-- CONTEÚDO SCROLLÁVEL DO APLICATIVO -->
@@ -246,16 +258,54 @@
             <!-- 2. PAINEL PRINCIPAL (DASHBOARD TOTALMENTE EXPANSÍVEL) -->
             <section id="screen-dashboard" class="sub-screen active">
 
-                <!-- 1. Bloco de Cobertura Geral -->
-                <div class="card summary-card">
-                    <h3>Status do Histórico</h3>
-                    <div class="progress-container">
-                        <div class="progress-bar" id="dashboard-progress">0%</div>
-                    </div>
-                    <p id="dashboard-text">Carregando informações...</p>
+                <!-- 1. Banner de Próximo Agendamento -->
+                <div class="card next-schedule-card" id="dashboard-next-schedule-banner">
+                    <h3>⏱️ Próximo Agendamento</h3>
+                    <p id="dashboard-next-schedule-text">Carregando próxima dose...</p>
                 </div>
 
-                <!-- 2. Bloco de Campanhas Ativas -->
+                <!-- 2. Bloco de Cobertura Geral -->
+                <div class="card summary-card">
+                    <div class="summary-header-row">
+                        <h3>Status do Histórico</h3>
+                        <span id="dashboard-progress-badge" class="dashboard-progress-badge">0%</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="dashboard-progress"></div>
+                    </div>
+                    <p id="dashboard-text">Carregando informações...</p>
+                    <p id="dashboard-goal-text" class="dashboard-goal-text">Definindo meta de imunização para seu perfil...</p>
+                </div>
+
+                <!-- 3. Atalhos de Ação Rápida -->
+                <div class="card quick-actions-card">
+                    <div class="quick-actions-row">
+                        <button id="quick-action-dependente" class="quick-action-btn" type="button" aria-label="Adicionar dependente">
+                            <span class="quick-action-icon">👤</span>
+                            <span class="quick-action-label">+ Dependente</span>
+                        </button>
+                        <button id="quick-action-posto" class="quick-action-btn" type="button" aria-label="Buscar posto de saúde">
+                            <span class="quick-action-icon">🗺️</span>
+                            <span class="quick-action-label">Buscar Posto</span>
+                        </button>
+                        <button id="quick-action-pdf" class="quick-action-btn" type="button" aria-label="Exportar carteira em PDF">
+                            <span class="quick-action-icon">📄</span>
+                            <span class="quick-action-label">Exportar PDF</span>
+                        </button>
+                        <button id="quick-action-bula" class="quick-action-btn" type="button" aria-label="Buscar bula rápida">
+                            <span class="quick-action-icon">🔍</span>
+                            <span class="quick-action-label">Bula Rápida</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4. Alertas de Próximas Vacinas por Faixa Etária -->
+                <div class="card alerts-card">
+                    <h3>⚠️ Próximas Vacinas Sugeridas pelo SUS</h3>
+                    <ul id="dashboard-alerts-list"></ul>
+                </div>
+
+                <!-- 5. Bloco de Campanhas Ativas -->
                 <div class="card accordion-card" data-target="dashboard-campaigns-list">
                     <div class="accordion-header">
                         <h3>📅 Campanhas de Vacinação Ativas</h3>
@@ -264,7 +314,7 @@
                     <div id="dashboard-campaigns-list" class="accordion-content hidden"></div>
                 </div>
 
-                <!-- 3. Bloco de Alertas de Surtos (Com Datas de 2026) -->
+                <!-- 6. Bloco de Alertas de Surtos -->
                 <div class="card accordion-card" data-target="dashboard-outbreaks-list">
                     <div class="accordion-header">
                         <h3>🌍 Alertas Epidemiológicos Regionais</h3>
@@ -273,8 +323,8 @@
                     <div id="dashboard-outbreaks-list" class="accordion-content hidden"></div>
                 </div>
 
-                <!-- 4. Bloco de Validade e Próximos Reforços -->
-                <div class="card accordion-card" data-target="dashboard-expirations-list">
+                <!-- 7. Bloco de Validade e Próximos Reforços -->
+                <div id="dashboard-expirations-card" class="card accordion-card" data-target="dashboard-expirations-list">
                     <div class="accordion-header">
                         <h3>⏳ Cronograma e Validade de Reforços</h3>
                         <span class="accordion-arrow">▼</span>
@@ -282,7 +332,7 @@
                     <div id="dashboard-expirations-list" class="accordion-content hidden"></div>
                 </div>
 
-                <!-- 5. Bloco de Estatísticas da Família -->
+                <!-- 8. Bloco de Estatísticas da Família -->
                 <div class="card accordion-card" data-target="dashboard-family-list">
                     <div class="accordion-header">
                         <h3>📈 Métricas da Saúde Familiar</h3>
@@ -291,19 +341,13 @@
                     <div id="dashboard-family-list" class="accordion-content hidden"></div>
                 </div>
 
-                <!-- 6. Bloco de Combate a Fake News -->
+                <!-- 9. Bloco de Combate a Fake News -->
                 <div class="card accordion-card" data-target="dashboard-fakenews-list">
                     <div class="accordion-header">
                         <h3>🛡️ Vacina Sem Fake - Fato ou Boato?</h3>
                         <span class="accordion-arrow">▼</span>
                     </div>
                     <div id="dashboard-fakenews-list" class="accordion-content hidden"></div>
-                </div>
-
-                <!-- 7. Alertas de Próximas Vacinas Fixo -->
-                <div class="card alerts-card">
-                    <h3>⚠️ Próximas Vacinas Sugeridas pelo SUS</h3>
-                    <ul id="dashboard-alerts-list"></ul>
                 </div>
 
             </section>

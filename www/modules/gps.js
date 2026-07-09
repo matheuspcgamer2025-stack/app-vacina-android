@@ -11,6 +11,17 @@ const BANCO_POSTOS = [
 
 let postosCache = null;
 
+function salvarContextoRegional({ bairro = '', cep = '', origem = 'busca' }) {
+    const payload = {
+        bairro: String(bairro || '').trim(),
+        cep: String(cep || '').trim(),
+        origem,
+        atualizadoEm: new Date().toISOString()
+    };
+
+    localStorage.setItem('app_alert_region', JSON.stringify(payload));
+}
+
 function formatarKm(km) {
     return `${km.toFixed(1).replace('.', ',')} km`;
 }
@@ -167,6 +178,12 @@ export async function buscarEExibirPosto() {
     const apenasDigitos = termoRaw.replace(/\D/g, '');
     const isCep = apenasDigitos.length >= 5; // considera CEP se tiver 5 ou mais dígitos
 
+    salvarContextoRegional({
+        bairro: isCep ? '' : termoRaw,
+        cep: isCep ? apenasDigitos : '',
+        origem: 'busca-manual'
+    });
+
     // Para buscas por texto, exige pelo menos 3 caracteres úteis para evitar resultados triviais
     if (!isCep && termoBusca.length < 3) {
         containerResultados.innerHTML = `
@@ -261,6 +278,15 @@ export async function ativarLocalizacaoEListarPostosProximos() {
                 </div>
             `);
             return;
+        }
+
+        const maisProximo = topResultados[0];
+        if (maisProximo) {
+            salvarContextoRegional({
+                bairro: maisProximo.bairro || '',
+                cep: (maisProximo.cep || '').replace(/\D/g, ''),
+                origem: 'gps'
+            });
         }
 
         renderizarPostos(containerResultados, topResultados);

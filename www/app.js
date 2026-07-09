@@ -9,6 +9,64 @@ import { configurarFormularioCarteira, renderizarCarteira, carregarDadosDoFireba
 import { renderizarLembretes, configurarNotificacoes } from './modules/reminders.js';
 import { buscarEExibirPosto, ativarLocalizacaoEListarPostosProximos } from './modules/gps.js';
 import { inicializarCamposDataDigitaveis } from './modules/date-input.js';
+import { appState } from './modules/database.js';
+
+let painelSyncHideTimer = null;
+
+function garantirIndicadorSyncPainel() {
+    const dashboard = document.getElementById('screen-dashboard');
+    if (!dashboard) return null;
+
+    let indicador = document.getElementById('dashboard-sync-indicator');
+    if (indicador) return indicador;
+
+    indicador = document.createElement('div');
+    indicador.id = 'dashboard-sync-indicator';
+    indicador.className = 'dashboard-sync-indicator hidden';
+    indicador.innerHTML = '<span class="dashboard-sync-spinner" aria-hidden="true"></span><span id="dashboard-sync-text">Sincronizando painel...</span>';
+    dashboard.prepend(indicador);
+    return indicador;
+}
+
+function mostrarIndicadorSync(mensagem = 'Sincronizando painel...') {
+    const indicador = garantirIndicadorSyncPainel();
+    if (!indicador) return;
+
+    const texto = document.getElementById('dashboard-sync-text');
+    const spinner = indicador.querySelector('.dashboard-sync-spinner');
+    if (texto) texto.textContent = mensagem;
+    if (spinner) spinner.classList.remove('success');
+    indicador.classList.remove('success');
+
+    if (painelSyncHideTimer) {
+        clearTimeout(painelSyncHideTimer);
+        painelSyncHideTimer = null;
+    }
+
+    indicador.classList.remove('hidden');
+}
+
+function marcarIndicadorSyncSucesso(mensagem = 'Sincronizado') {
+    const indicador = document.getElementById('dashboard-sync-indicator');
+    if (!indicador) return;
+
+    const texto = document.getElementById('dashboard-sync-text');
+    const spinner = indicador.querySelector('.dashboard-sync-spinner');
+
+    if (texto) texto.textContent = mensagem;
+    if (spinner) spinner.classList.add('success');
+    indicador.classList.add('success');
+}
+
+function ocultarIndicadorSync(delayMs = 450) {
+    const indicador = document.getElementById('dashboard-sync-indicator');
+    if (!indicador) return;
+
+    if (painelSyncHideTimer) clearTimeout(painelSyncHideTimer);
+    painelSyncHideTimer = setTimeout(() => {
+        indicador.classList.add('hidden');
+    }, delayMs);
+}
 
 // 2. MECANISMO DE SAÍDA GARANTIDA DA TELA DE ABERTURA (ZÉ GOTINHA)
 window.addEventListener('load', () => {
@@ -113,12 +171,36 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Atualiza o painel automaticamente ao trocar Pai/Filho, mesmo fora da aba Painel.
+    document.addEventListener('app:perfil-trocado', () => {
+        mostrarIndicadorSync('Atualizando perfil selecionado...');
+        inicializarDashboard();
+        marcarIndicadorSyncSucesso('Perfil sincronizado');
+        ocultarIndicadorSync(550);
+    });
 });
+
+async function atualizarPainelComLeituraLimpa() {
+    // 1 leitura limpa por entrada na aba Painel.
+    mostrarIndicadorSync('Sincronizando dados mais recentes...');
+    try {
+        if (appState.usuarioLogado) {
+            await carregarDadosDoFirebase();
+        }
+        inicializarDashboard();
+        marcarIndicadorSyncSucesso('Painel sincronizado');
+    } finally {
+        ocultarIndicadorSync(650);
+    }
+}
 
 // 3. GERENCIADOR GLOBAL DE ABAS (INTERACTION MANAGER):
 window.mudarAba = function(targetId, elementoBotao) {
     mudarAba(targetId, elementoBotao);
-    if (targetId === 'dashboard') inicializarDashboard();
+    if (targetId === 'dashboard') {
+        atualizarPainelComLeituraLimpa();
+    }
     if (targetId === 'calendar') filtrarCalendario('criança');
     if (targetId === 'wallet') renderizarCarteira();
     if (targetId === 'reminders') renderizarLembretes();
