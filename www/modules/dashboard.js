@@ -1,5 +1,5 @@
 import { CALENDARIO_SUS, appState } from './database.js';
-import { obterPerfilAtivo, calcularIdadeDetalhada } from './profile.js';
+import { obterPerfilAtivo, calcularIdadeDetalhada, obterPerfilTitular } from './profile.js';
 import { compartilharHistoricoVacinas } from './wallet.js';
 
 const DASH_NOTIFICATIONS_LAST_SEEN_KEY = 'app_dashboard_notifications_last_seen';
@@ -666,6 +666,29 @@ export function inicializarDashboard() {
     const campanha = obterCampanhaPorFaixa(faixa, new Date().getFullYear());
     const contextoRegional = obterContextoRegional();
     const reforco = calcularReforcoUrgente(vacinasPerfil);
+
+    const perfilTitular = obterPerfilTitular();
+    const nomePrincipal = String(perfilTitular?.nomeCompleto || '').trim();
+    const primeiroNome = nomePrincipal ? nomePrincipal.split(' ').filter(Boolean)[0] : 'Usuário';
+
+    const saudacao = document.getElementById('dashboard-greeting');
+    if (saudacao) saudacao.textContent = `Olá, ${primeiroNome}`;
+
+    const dependentesLocais = JSON.parse(localStorage.getItem('app_dependentes') || '[]');
+    const totalDependentes = Array.isArray(dependentesLocais) ? dependentesLocais.length : 0;
+    const contadorDependentes = document.getElementById('dashboard-counter-dependentes');
+    const contadorPendentes = document.getElementById('dashboard-counter-pendentes');
+    const contadorAplicadas = document.getElementById('dashboard-counter-aplicadas');
+
+    if (contadorDependentes) {
+        contadorDependentes.textContent = `${totalDependentes} ${totalDependentes === 1 ? 'Dependente' : 'Dependentes'}`;
+    }
+    if (contadorPendentes) {
+        contadorPendentes.textContent = `${pendentes.length} ${pendentes.length === 1 ? 'Pendente' : 'Pendentes'}`;
+    }
+    if (contadorAplicadas) {
+        contadorAplicadas.textContent = `${vacinasPerfil.length} ${vacinasPerfil.length === 1 ? 'Aplicada' : 'Aplicadas'}`;
+    }
 
     const barra = document.getElementById('dashboard-progress');
     const badge = document.getElementById('dashboard-progress-badge');

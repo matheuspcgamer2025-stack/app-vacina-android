@@ -2,6 +2,7 @@ import { CALENDARIO_SUS, appState } from './database.js';
 import { registrarVacinaPeloCalendario, carregarDadosDoFirebase } from './wallet.js';
 import { obterPerfilAtivo, formatarIdadeHumana } from './profile.js';
 import { avaliarStatusVacina } from './schedule.js';
+import { appConfirm } from './dialogs.js';
 
 let faixaEtariaAtual = 'criança'; // Guarda a aba ativa para o filtro secundário da busca
 
@@ -112,7 +113,14 @@ function renderizarListaFiltrada(textoPesquisa) {
                 const nomeVacina = btnTomei.getAttribute('data-nome');
                 if (!nomeVacina) return;
 
-                if (!confirm(`Registrar "${nomeVacina}" como aplicada no perfil atual?`)) {
+                const confirmarRegistro = await appConfirm(`Registrar "${nomeVacina}" como aplicada no perfil atual?`, {
+                    titulo: 'Registrar vacina',
+                    textoConfirmar: 'Registrar',
+                    textoCancelar: 'Cancelar',
+                    tipo: 'warning'
+                });
+
+                if (!confirmarRegistro) {
                     return;
                 }
 

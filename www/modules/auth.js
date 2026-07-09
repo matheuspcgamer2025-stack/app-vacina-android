@@ -6,10 +6,14 @@ import {
     sendPasswordResetEmail,
     GoogleAuthProvider,
     signInWithCredential,
-    signInWithPopup
+    signInWithPopup,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    updatePassword
 } from './database.js';
-import { salvarPerfilTitular } from './profile.js';
+import { salvarPerfilTitular, obterPerfilTitular } from './profile.js';
 import { parseDateToIso } from './date-input.js';
+import { appConfirm } from './dialogs.js';
 
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REGEX_CPF = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
@@ -161,6 +165,89 @@ function exibirErroGoogleDetalhado(error) {
     alert(`❌ Falha no Google Sign-In. Código: ${codigo || 'desconhecido'}. Detalhe: ${mensagem}`);
 }
 
+function formatarNomeGoogle(email, displayName) {
+    const nomeBase = String(displayName || '').trim() || String(email || '').split('@')[0] || 'Usuário Google';
+    return nomeBase
+        .replace(/[._-]+/g, ' ')
+        .split(' ')
+        .filter(Boolean)
+        .map(parte => parte.charAt(0).toUpperCase() + parte.slice(1).toLowerCase())
+        .join(' ');
+}
+
+function coletarDataNascimentoNoLoginGoogle() {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('modal-google-birthdate');
+        const form = document.getElementById('modal-google-birthdate-form');
+        const input = document.getElementById('google-birthdate-input');
+        const botaoCancelar = document.getElementById('btn-google-birthdate-cancel');
+
+        if (!modal || !form || !input || !botaoCancelar) {
+            resolve(null);
+            return;
+        }
+
+        let tentativas = 0;
+
+        const encerrar = (resultado) => {
+            modal.classList.add('hidden');
+            form.removeEventListener('submit', aoEnviar);
+            botaoCancelar.removeEventListener('click', aoCancelar);
+            input.value = '';
+            resolve(resultado);
+        };
+
+        const aoCancelar = () => encerrar(null);
+
+        const aoEnviar = (e) => {
+            e.preventDefault();
+            tentativas += 1;
+
+            const dataIso = parseDateToIso(String(input.value || '').trim());
+            if (validarDataNascimento(dataIso)) {
+                encerrar(dataIso);
+                return;
+            }
+
+            if (tentativas >= 3) {
+                alert('⚠️ Data inválida em 3 tentativas. Tente novamente no próximo login.');
+                encerrar(null);
+                return;
+            }
+
+            alert('⚠️ Data inválida. Informe no formato dd/mm/aaaa e com data real.');
+            input.focus();
+        };
+
+        form.addEventListener('submit', aoEnviar);
+        botaoCancelar.addEventListener('click', aoCancelar);
+        modal.classList.remove('hidden');
+        setTimeout(() => input.focus(), 20);
+    });
+}
+
+export async function alterarSenhaUsuarioAtual(senhaAtual, novaSenha) {
+    const usuario = auth.currentUser;
+
+    if (!usuario?.email) {
+        throw new Error('Sem usuário autenticado para alterar senha.');
+    }
+
+    const providers = Array.isArray(usuario.providerData)
+        ? usuario.providerData.map(p => p?.providerId)
+        : [];
+    const apenasGoogle = providers.includes('google.com') && !providers.includes('password');
+    if (apenasGoogle) {
+        const erro = new Error('Conta Google sem senha local.');
+        erro.code = 'auth/no-password-provider';
+        throw erro;
+    }
+
+    const credencial = EmailAuthProvider.credential(usuario.email, senhaAtual);
+    await reauthenticateWithCredential(usuario, credencial);
+    await updatePassword(usuario, novaSenha);
+}
+
 export function inicializarAutentication(onLoginSuccess) {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
@@ -193,10 +280,21 @@ export function inicializarAutentication(onLoginSuccess) {
         }
 
         const email = identificador.toLowerCase();
+        if (email.endsWith('@vacinaapp.local')) {
+            alert('⚠️ Este identificador é interno (CPF) e não recebe e-mail. Para recuperar senha por e-mail, use uma conta cadastrada com e-mail real.');
+            return;
+        }
+
+        const actionCodeSettings = {
+            url: window.location.origin && window.location.origin !== 'null'
+                ? `${window.location.origin}/index.html`
+                : 'https://vacinaapp-2cca0.firebaseapp.com',
+            handleCodeInApp: false
+        };
 
         try {
-            await sendPasswordResetEmail(auth, email);
-            alert(`📩 Enviamos um link de recuperação para ${email}. Verifique sua caixa de entrada.`);
+            await sendPasswordResetEmail(auth, email, actionCodeSettings);
+            alert(`📩 Link de recuperação enviado para ${email}. Verifique caixa de entrada, spam e promoções.`);
         } catch (error) {
             const codigo = error?.code || '';
 
@@ -215,7 +313,12 @@ export function inicializarAutentication(onLoginSuccess) {
                 return;
             }
 
-            alert('❌ Não foi possível enviar o e-mail de recuperação agora. Tente novamente.');
+            if (codigo === 'auth/too-many-requests') {
+                alert('⚠️ Muitas tentativas de recuperação em pouco tempo. Aguarde alguns minutos e tente novamente.');
+                return;
+            }
+
+            alert(`❌ Não foi possível enviar o e-mail de recuperação agora. Código: ${codigo || 'desconhecido'}.`);
         }
     });
 
@@ -248,7 +351,12 @@ export function inicializarAutentication(onLoginSuccess) {
                     return;
                 }
 
-                const criarContaOffline = confirm('Sem conexão com Firebase e não encontramos conta local para este CPF/e-mail. Deseja criar uma conta local offline neste dispositivo com essas credenciais?');
+                const criarContaOffline = await appConfirm('Sem conexão com Firebase e não encontramos conta local para este CPF/e-mail. Deseja criar uma conta local offline neste dispositivo com essas credenciais?', {
+                    titulo: 'Criar conta offline',
+                    textoConfirmar: 'Criar conta',
+                    textoCancelar: 'Cancelar',
+                    tipo: 'warning'
+                });
                 if (criarContaOffline) {
                     salvarContaLocal(id, senha);
                     concluirLogin(id, null, screenLogin, appMain, onLoginSuccess);
@@ -327,6 +435,20 @@ export function inicializarAutentication(onLoginSuccess) {
             if (!FirebaseAuthentication) {
                 // No navegador, usa popup real do Google/Firebase em vez de login simulado.
                 const credencialWeb = await signInWithPopup(auth, provider);
+                const dataNascimento = await coletarDataNascimentoNoLoginGoogle();
+                if (!dataNascimento) {
+                    try { await auth.signOut(); } catch (_) {}
+                    alert('⚠️ Login Google cancelado: a data de nascimento é necessária para continuar.');
+                    return;
+                }
+
+                const sexoAnterior = obterPerfilTitular()?.sexo === 'Masculino' ? 'Masculino' : 'Feminino';
+                salvarPerfilTitular({
+                    nomeCompleto: formatarNomeGoogle(credencialWeb?.user?.email, credencialWeb?.user?.displayName),
+                    dataNascimento,
+                    sexo: sexoAnterior
+                });
+
                 concluirLogin(
                     credencialWeb?.user?.email || 'usuario_google',
                     credencialWeb?.user?.email,
@@ -344,11 +466,27 @@ export function inicializarAutentication(onLoginSuccess) {
             const idToken = resultado?.credential?.idToken || resultado?.authentication?.idToken;
             const accessToken = resultado?.credential?.accessToken || resultado?.authentication?.accessToken;
             const email = resultado?.user?.email;
+            const displayName = resultado?.user?.displayName;
             
             if (idToken) {
                 // Conecta a sessao do Google com o Firebase Auth Web SDK
                 const credential = GoogleAuthProvider.credential(idToken);
                 await signInWithCredential(auth, credential);
+
+                const dataNascimento = await coletarDataNascimentoNoLoginGoogle();
+                if (!dataNascimento) {
+                    try { await auth.signOut(); } catch (_) {}
+                    alert('⚠️ Login Google cancelado: a data de nascimento é necessária para continuar.');
+                    return;
+                }
+
+                const sexoAnterior = obterPerfilTitular()?.sexo === 'Masculino' ? 'Masculino' : 'Feminino';
+                salvarPerfilTitular({
+                    nomeCompleto: formatarNomeGoogle(auth.currentUser?.email || email, displayName),
+                    dataNascimento,
+                    sexo: sexoAnterior
+                });
+
                 concluirLogin(
                     email || auth.currentUser?.email || 'usuario_google',
                     auth.currentUser?.email || email,
@@ -360,6 +498,21 @@ export function inicializarAutentication(onLoginSuccess) {
                 // Alguns dispositivos podem retornar apenas accessToken
                 const credential = GoogleAuthProvider.credential(null, accessToken);
                 await signInWithCredential(auth, credential);
+
+                const dataNascimento = await coletarDataNascimentoNoLoginGoogle();
+                if (!dataNascimento) {
+                    try { await auth.signOut(); } catch (_) {}
+                    alert('⚠️ Login Google cancelado: a data de nascimento é necessária para continuar.');
+                    return;
+                }
+
+                const sexoAnterior = obterPerfilTitular()?.sexo === 'Masculino' ? 'Masculino' : 'Feminino';
+                salvarPerfilTitular({
+                    nomeCompleto: formatarNomeGoogle(auth.currentUser?.email || email, displayName),
+                    dataNascimento,
+                    sexo: sexoAnterior
+                });
+
                 concluirLogin(
                     email || auth.currentUser?.email || 'usuario_google',
                     auth.currentUser?.email || email,

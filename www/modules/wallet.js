@@ -1,6 +1,7 @@
 import { db, appState, auth, CALENDARIO_SUS } from './database.js';
 import { calcularIntervaloDose } from './features.js';
 import { parseDateToIso } from './date-input.js';
+import { appConfirm } from './dialogs.js';
 // CORREÇÃO DA IMPORTAÇÃO: Usando a URL completa oficial da Google sem cortes
 import { 
     collection, 
@@ -247,7 +248,14 @@ export function renderizarCarteira(onDeleteCallback) {
         
         // Mecanismo de exclusão direta do documento no servidor da Google
         card.querySelector('.delete-btn').addEventListener('click', async function() {
-            if (!confirm(`Deseja realmente apagar o registro da vacina ${vax.nome} de forma permanente da nuvem?`)) return;
+            const confirmarExclusao = await appConfirm(`Deseja realmente apagar o registro da vacina ${vax.nome} de forma permanente da nuvem?`, {
+                titulo: 'Excluir registro',
+                textoConfirmar: 'Excluir',
+                textoCancelar: 'Cancelar',
+                tipo: 'error'
+            });
+
+            if (!confirmarExclusao) return;
 
             try {
                 // Deleta o documento específico usando o ID gerado pelo Firebase

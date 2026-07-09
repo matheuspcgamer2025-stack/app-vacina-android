@@ -158,26 +158,131 @@
         </div>
 
         <nav class="sidebar-menu">
-            <button class="sidebar-item" id="menu-enviar-feedback">
-                <span class="icon">☁️</span> Enviar Feedback / Dúvida
+            <button class="sidebar-item" data-target="sidebar-panel-editar-perfil" id="menu-editar-perfil">
+                <span class="icon">👤</span> Editar Perfil
             </button>
-            <button class="sidebar-item" id="menu-suporte-whatsapp">
-                <span class="icon">💬</span> Suporte via WhatsApp
+            <button class="sidebar-item" data-target="sidebar-panel-alterar-senha" id="menu-alterar-senha">
+                <span class="icon">🔒</span> Alterar Senha
             </button>
-            <button class="sidebar-item" id="menu-informacoes-uteis">
-                <span class="icon">ℹ️</span> Informações Úteis
+            <button class="sidebar-item" data-target="sidebar-panel-ajuda-suporte" id="menu-ajuda-suporte">
+                <span class="icon">❓</span> Ajuda e Suporte
             </button>
-            <button class="sidebar-item" id="menu-obter-ajuda">
-                <span class="icon">❓</span> Obter ajuda
+            <button class="sidebar-item" data-target="sidebar-panel-enviar-sugestao" id="menu-enviar-sugestao">
+                <span class="icon">💡</span> Enviar Sugestão
             </button>
-            <button class="sidebar-item" id="menu-sobre">
+            <button class="sidebar-item" data-target="sidebar-panel-sobre" id="menu-sobre-app">
                 <span class="icon">ℹ️</span> Sobre
             </button>
             <button class="sidebar-item btn-sair" id="menu-sair">
                 <span class="icon">🚪</span> Sair da Conta
             </button>
         </nav>
+
+        <section class="sidebar-content">
+            <div id="sidebar-panel-editar-perfil" class="sidebar-panel hidden">
+                <div class="sidebar-panel-titlebar">
+                    <h4>👤 Perfil do Usuário Principal</h4>
+                    <button type="button" class="sidebar-panel-close" aria-label="Fechar painel">✕</button>
+                </div>
+                <form id="sidebar-edit-profile-form">
+                    <div class="form-group">
+                        <label for="sidebar-profile-nome-completo">Nome Completo</label>
+                        <input type="text" id="sidebar-profile-nome-completo" placeholder="Digite seu nome completo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sidebar-profile-data-nascimento">Data de Nascimento</label>
+                        <input type="text" id="sidebar-profile-data-nascimento" class="typed-date-input" maxlength="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sidebar-profile-sexo">Sexo</label>
+                        <select id="sidebar-profile-sexo" required>
+                            <option value="Feminino">Feminino</option>
+                            <option value="Masculino">Masculino</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">Salvar Alterações</button>
+                </form>
+            </div>
+
+            <div id="sidebar-panel-alterar-senha" class="sidebar-panel hidden">
+                <div class="sidebar-panel-titlebar">
+                    <h4>🔒 Alterar Senha</h4>
+                    <button type="button" class="sidebar-panel-close" aria-label="Fechar painel">✕</button>
+                </div>
+                <form id="sidebar-change-password-form">
+                    <div class="form-group">
+                        <label for="sidebar-senha-atual">Senha Atual</label>
+                        <input type="password" id="sidebar-senha-atual" placeholder="Digite sua senha atual" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sidebar-senha-nova">Nova Senha</label>
+                        <input type="password" id="sidebar-senha-nova" placeholder="Digite a nova senha" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sidebar-senha-confirmar">Confirmar Nova Senha</label>
+                        <input type="password" id="sidebar-senha-confirmar" placeholder="Repita a nova senha" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Alterar Senha</button>
+                </form>
+            </div>
+
+            <div id="sidebar-panel-ajuda-suporte" class="sidebar-panel hidden">
+                <div class="sidebar-panel-titlebar">
+                    <h4>❓ Ajuda e Suporte</h4>
+                    <button type="button" class="sidebar-panel-close" aria-label="Fechar painel">✕</button>
+                </div>
+                <div class="sidebar-faq-list">
+                    <button class="sidebar-faq-item" type="button" data-target="faq-1">Quais vacinas são obrigatórias no calendário infantil?</button>
+                    <p id="faq-1" class="sidebar-faq-answer hidden">O calendário infantil do SUS inclui vacinas como BCG, Hepatite B, Pentavalente, Poliomielite, Tríplice Viral e reforços conforme idade.</p>
+
+                    <button class="sidebar-faq-item" type="button" data-target="faq-2">Como saber se estou com vacina pendente?</button>
+                    <p id="faq-2" class="sidebar-faq-answer hidden">No Painel, o app compara sua carteira com o calendário oficial e mostra as vacinas pendentes automaticamente.</p>
+
+                    <button class="sidebar-faq-item" type="button" data-target="faq-3">Posso cadastrar dependentes?</button>
+                    <p id="faq-3" class="sidebar-faq-answer hidden">Sim. Na aba Carteira, use o botão Novo + para criar e acompanhar o histórico de cada dependente.</p>
+                </div>
+                <div class="sidebar-contact-card">
+                    <p>Precisa de atendimento direto?</p>
+                    <button id="sidebar-whatsapp-support" type="button" class="btn-success">💬 Entrar em contato via WhatsApp</button>
+                </div>
+            </div>
+
+            <div id="sidebar-panel-enviar-sugestao" class="sidebar-panel hidden">
+                <div class="sidebar-panel-titlebar">
+                    <h4>💡 Enviar Sugestão</h4>
+                    <button type="button" class="sidebar-panel-close" aria-label="Fechar painel">✕</button>
+                </div>
+                <p class="sidebar-helper-text">Sua opinião é muito importante para nós.</p>
+                <form id="sidebar-suggestion-form">
+                    <div class="form-group">
+                        <label for="sidebar-suggestion-name">Nome</label>
+                        <input type="text" id="sidebar-suggestion-name" placeholder="Seu nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sidebar-suggestion-email">E-mail</label>
+                        <input type="email" id="sidebar-suggestion-email" placeholder="Seu e-mail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sidebar-suggestion-message">Sugestão</label>
+                        <textarea id="sidebar-suggestion-message" rows="4" placeholder="Conte sua sugestão para melhorar o app" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">Enviar Sugestão</button>
+                </form>
+            </div>
+
+            <div id="sidebar-panel-sobre" class="sidebar-panel hidden">
+                <div class="sidebar-panel-titlebar">
+                    <h4>ℹ️ Sobre o VacinaApp</h4>
+                    <button type="button" class="sidebar-panel-close" aria-label="Fechar painel">✕</button>
+                </div>
+                <p>Versão 1.0.0</p>
+                <p>Aplicativo de carteira digital de vacinação com foco em controle familiar, alertas e acompanhamento de doses pendentes.</p>
+                <p>Tecnologias: HTML, CSS, JavaScript, Firebase e Capacitor para Android.</p>
+            </div>
+        </section>
     </aside>
+
+    <div id="sidebar-panel-backdrop" class="sidebar-panel-backdrop hidden"></div>
 
     <!-- POPUP / MODAL PARA ENVIAR O FEEDBACK -->
     <div id="modal-feedback" class="modal hidden">
@@ -226,21 +331,52 @@
         </div>
     </div>
 
+    <div id="modal-google-birthdate" class="modal hidden">
+        <div class="modal-content card">
+            <h3>🎂 Confirmar Data de Nascimento</h3>
+            <p>Para continuar com sua conta Google, informe sua data de nascimento.</p>
+            <form id="modal-google-birthdate-form">
+                <div class="form-group">
+                    <label for="google-birthdate-input">Data de nascimento</label>
+                    <input type="text" id="google-birthdate-input" class="typed-date-input" maxlength="10" placeholder="dd/mm/aaaa" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="btn-google-birthdate-cancel" class="btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn-primary">Continuar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-dialog-modal" class="modal hidden">
+        <div class="modal-content card app-dialog-content">
+            <div class="app-dialog-title-row">
+                <h3 id="app-dialog-title">Aviso</h3>
+                <button id="app-dialog-close" type="button" class="app-dialog-close" aria-label="Fechar">✕</button>
+            </div>
+            <p id="app-dialog-message"></p>
+            <div class="modal-actions app-dialog-actions">
+                <button id="app-dialog-cancel" type="button" class="btn-secondary hidden">Cancelar</button>
+                <button id="app-dialog-confirm" type="button" class="btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ESTRUTURA PRINCIPAL DO APP (Aparece após o Login) -->
     <div id="app-main" class="hidden">
-        <!-- CABEÇALHO OFICIAL COM MENU HAMBÚRGUER -->
+        <!-- CABEÇALHO OFICIAL -->
         <header class="app-header">
             <div class="header-left">
-                <!-- APENAS o botão com os três tracinhos na ponta esquerda -->
-                <button id="btn-menu-hamburger" class="btn-icon">☰</button>
+                <p id="dashboard-greeting" class="dashboard-greeting">Olá, Usuário</p>
             </div>
             <div class="header-right">
+                <!-- Tema, alertas e perfil em linha compacta -->
+                <button id="main-theme-toggle" class="btn-theme-toggle" aria-label="Alternar tema">🌓</button>
                 <button id="btn-dashboard-notifications" class="btn-icon btn-notification" aria-label="Abrir central de notificações">
                     <span>🔔</span>
                     <span id="notification-dot" class="notification-dot hidden"></span>
                 </button>
-                <!-- APENAS o botão de mudar de tema na ponta direita -->
-                <button id="main-theme-toggle" class="btn-theme-toggle">🌓</button>
+                <button id="btn-menu-hamburger" class="btn-icon" aria-label="Abrir menu de perfil">👤</button>
             </div>
         </header>
 
@@ -257,6 +393,22 @@
         <main class="app-content">
             <!-- 2. PAINEL PRINCIPAL (DASHBOARD TOTALMENTE EXPANSÍVEL) -->
             <section id="screen-dashboard" class="sub-screen active">
+
+                <div class="dashboard-headline-row">
+                    <h2 id="dashboard-main-title">Acompanhe as vacinas da sua família</h2>
+                </div>
+
+                <div class="dashboard-counters-row">
+                    <div class="dashboard-counter-card">
+                        <p id="dashboard-counter-dependentes" class="dashboard-counter-value">0 Dependentes</p>
+                    </div>
+                    <div class="dashboard-counter-card">
+                        <p id="dashboard-counter-pendentes" class="dashboard-counter-value">0 Pendentes</p>
+                    </div>
+                    <div class="dashboard-counter-card">
+                        <p id="dashboard-counter-aplicadas" class="dashboard-counter-value">0 Aplicadas</p>
+                    </div>
+                </div>
 
                 <!-- 1. Banner de Próximo Agendamento -->
                 <div class="card next-schedule-card" id="dashboard-next-schedule-banner">

@@ -3,6 +3,7 @@ import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/fi
 import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 import { formatarIdadeHumana } from './profile.js';
 import { formatIsoToDisplay, parseDateToIso } from './date-input.js';
+import { appConfirm } from './dialogs.js';
 
 function normalizarDependente(dep) {
     const nome = String(dep?.nome || '').trim();
@@ -181,7 +182,14 @@ export function inicializarNovasFuncoes(onUpdateCallback) {
         }
 
         const nomeDependente = dependentes.find(d => d.id === idSelecionado)?.nome;
-        if (!confirm(`Deseja realmente remover o perfil de "${nomeDependente}"? Todas as vacinas associadas também serão apagadas.`)) {
+        const confirmarRemocao = await appConfirm(`Deseja realmente remover o perfil de "${nomeDependente}"? Todas as vacinas associadas também serão apagadas.`, {
+            titulo: 'Remover dependente',
+            textoConfirmar: 'Remover',
+            textoCancelar: 'Cancelar',
+            tipo: 'error'
+        });
+
+        if (!confirmarRemocao) {
             return;
         }
 

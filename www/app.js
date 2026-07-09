@@ -10,6 +10,7 @@ import { renderizarLembretes, configurarNotificacoes } from './modules/reminders
 import { buscarEExibirPosto, ativarLocalizacaoEListarPostosProximos } from './modules/gps.js';
 import { inicializarCamposDataDigitaveis } from './modules/date-input.js';
 import { appState } from './modules/database.js';
+import { setupAppDialogs } from './modules/dialogs.js';
 
 let painelSyncHideTimer = null;
 
@@ -86,6 +87,8 @@ window.addEventListener('load', () => {
 
 // 3. LOGICAS DE INICIALIZAÇÃO E CICLO DE VIDA DO APP:
 document.addEventListener('DOMContentLoaded', () => {
+    setupAppDialogs();
+
     // Inicializa os seletores de dependentes e recarrega a aba ao mudar de perfil
     inicializarNovasFuncoes(() => {
         const botaoAbaCarteira = document.querySelectorAll('.nav-item')[2];

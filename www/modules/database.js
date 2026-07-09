@@ -10,7 +10,10 @@ import {
     sendPasswordResetEmail,
     GoogleAuthProvider,
     signInWithCredential,
-    signInWithPopup
+    signInWithPopup,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    updatePassword
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
 // Suas chaves oficiais do console ajustadas e sem cortes de texto
@@ -35,7 +38,10 @@ export {
     sendPasswordResetEmail,
     GoogleAuthProvider,
     signInWithCredential,
-    signInWithPopup
+    signInWithPopup,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    updatePassword
 };
 
 // Estado global do aplicativo conectado à nuvem (Obrigatório para o app.js)

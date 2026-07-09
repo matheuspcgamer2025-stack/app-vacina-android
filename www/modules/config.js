@@ -14,6 +14,10 @@ export const WHATSAPP_CONFIG = {
     DEFAULT_MESSAGE: 'Olá, preciso de suporte com o VacinaApp!'
 };
 
+export const SUPPORT_CONFIG = {
+    SUPPORT_EMAIL: 'suporte@vacinaapp.com.br'
+};
+
 // URLs de referência
 export const URLS = {
     WHATSAPP_API: 'https://wa.me/',
