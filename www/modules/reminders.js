@@ -166,6 +166,12 @@ function idNotificacao(item) {
     return 50000 + (hashTexto(`${item.perfilId}|${item.nome}|${item.dataAlvoIso}`) % 40000);
 }
 
+function permissaoNotificacaoConcedida(permissao) {
+    const statusDisplay = permissao?.display;
+    const statusReceive = permissao?.receive;
+    return statusDisplay === 'granted' || statusDisplay === 'authorized' || statusReceive === 'granted' || statusReceive === 'authorized';
+}
+
 async function agendarNotificacoesNativas(LocalNotifications) {
     const pendencias = obterPendenciasTodosPerfis();
     const agora = new Date();
@@ -214,17 +220,35 @@ async function agendarNotificacoesNativas(LocalNotifications) {
 
 export async function configurarNotificacoes() {
     const LocalNotifications = window.Capacitor?.Plugins?.LocalNotifications;
+    const botao = document.getElementById('btn-toggle-notifications');
 
     if (!LocalNotifications) {
         alert('⚠️ Plugin nativo de notificações não encontrado. Instale @capacitor/local-notifications e rode npx cap sync.');
         return;
     }
 
+    const textoOriginal = botao?.innerHTML || '';
+
     try {
-        const permissao = await LocalNotifications.requestPermissions();
-        if (permissao.display !== 'granted') {
+        if (botao) {
+            botao.disabled = true;
+            botao.innerHTML = '⏳ Solicitando permissão...';
+        }
+
+        const permissaoAtual = await (LocalNotifications.checkPermissions?.() || Promise.resolve({}));
+        let permissaoFinal = permissaoAtual;
+
+        if (!permissaoNotificacaoConcedida(permissaoAtual)) {
+            permissaoFinal = await LocalNotifications.requestPermissions();
+        }
+
+        if (!permissaoNotificacaoConcedida(permissaoFinal)) {
             alert('❌ Permissão de notificações não concedida no Android.');
             return;
+        }
+
+        if (botao) {
+            botao.innerHTML = '📅 Programando alertas...';
         }
 
         const total = await agendarNotificacoesNativas(LocalNotifications);
@@ -232,5 +256,10 @@ export async function configurarNotificacoes() {
     } catch (error) {
         console.error('Erro ao configurar notificações nativas:', error);
         alert('❌ Não foi possível configurar alertas nativos agora. Tente novamente.');
+    } finally {
+        if (botao) {
+            botao.disabled = false;
+            botao.innerHTML = textoOriginal || '🔔 Ativar Alertas no Android';
+        }
     }
 }

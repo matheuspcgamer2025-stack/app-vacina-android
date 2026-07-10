@@ -422,6 +422,21 @@ body .card:hover, body .vax-item:hover {
     padding-top: 1rem;
 }
 
+#screen-register {
+    align-items: center;
+    justify-content: center;
+    padding-top: 2rem;
+    padding-bottom: 2.5rem;
+}
+
+@media (max-height: 44rem) {
+    #screen-register {
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 1rem;
+    }
+}
+
 .header-actions { 
     display: flex; 
     justify-content: flex-end; 
@@ -1505,7 +1520,10 @@ body .sidebar-item.btn-sair {
 }
 
 .sidebar-danger-zone {
-    margin-top: 0.9rem;
+    margin-top: auto;
+    margin-bottom: 0.95rem;
+    margin-left: 0.625rem;
+    margin-right: 0.625rem;
     padding: 0.9rem;
     border: 1px solid rgba(217, 83, 79, 0.35);
     border-radius: 0.9rem;

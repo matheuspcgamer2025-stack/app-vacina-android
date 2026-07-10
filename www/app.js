@@ -216,8 +216,14 @@ function inicializarAccordions() {
         // Remove o listener anterior para evitar duplicatas
         const novoCard = card.cloneNode(true);
         card.parentNode?.replaceChild(novoCard, card);
+        const cabecalho = novoCard.querySelector('.accordion-header');
 
-        novoCard.addEventListener('click', () => {
+        if (!cabecalho) return;
+
+        cabecalho.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
             const targetId = novoCard.getAttribute('data-target');
             const conteudo = document.getElementById(targetId);
 
