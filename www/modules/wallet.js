@@ -56,8 +56,14 @@ async function salvarRegistroVacina({ nome, lote, local, data, perfilId }) {
         dataRegistro: new Date().toISOString()
     };
 
-    await addDoc(collection(db, 'vacinas'), novaVacina);
-    return { proximaDoseCalculada };
+    const docRef = await addDoc(collection(db, 'vacinas'), novaVacina);
+    return {
+        proximaDoseCalculada,
+        registroCriado: {
+            id: docRef.id,
+            ...novaVacina
+        }
+    };
 }
 
 export async function registrarVacinaPeloCalendario(vacina) {
@@ -68,13 +74,15 @@ export async function registrarVacinaPeloCalendario(vacina) {
     }
 
     const dataAplicada = vacina?.dataAplicada || hoje;
-    await salvarRegistroVacina({
+    const { registroCriado } = await salvarRegistroVacina({
         nome,
         lote: `AUTO-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`,
         local: 'Registro rápido no calendário',
         data: dataAplicada,
         perfilId: appState.perfilAtual || 'principal'
     });
+
+    return registroCriado;
 }
 
 

@@ -597,8 +597,14 @@ function configurarAccordionDashboard() {
     secaoDashboard.querySelectorAll('.accordion-card').forEach(card => {
         const novoCard = card.cloneNode(true);
         card.parentNode?.replaceChild(novoCard, card);
+        const cabecalho = novoCard.querySelector('.accordion-header');
 
-        novoCard.addEventListener('click', () => {
+        if (!cabecalho) return;
+
+        cabecalho.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
             const targetId = novoCard.getAttribute('data-target');
             const conteudo = targetId ? document.getElementById(targetId) : null;
             if (!conteudo) return;
@@ -874,7 +880,10 @@ function renderizarJogoVacinaSemFake() {
     };
 
     answerButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
             const resposta = btn.getAttribute('data-answer');
             const acertou = resposta === desafio.resposta;
             const scoreAtual = Number(container.dataset.quizScore || '0');
@@ -887,5 +896,9 @@ function renderizarJogoVacinaSemFake() {
         });
     });
 
-    nextBtn?.addEventListener('click', avancar);
+    nextBtn?.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        avancar();
+    });
 }

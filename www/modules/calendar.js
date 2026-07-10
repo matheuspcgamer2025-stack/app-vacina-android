@@ -5,6 +5,8 @@ import { avaliarStatusVacina } from './schedule.js';
 import { appConfirm } from './dialogs.js';
 
 let faixaEtariaAtual = 'criança'; // Guarda a aba ativa para o filtro secundário da busca
+let exibirCtaCarteira = false;
+let ultimaVacinaRegistrada = '';
 
 export function filtrarCalendario(categoria) {
     faixaEtariaAtual = categoria;
@@ -23,6 +25,29 @@ function renderizarListaFiltrada(textoPesquisa) {
     const container = document.getElementById('calendar-list');
     if (!container) return;
     container.innerHTML = "";
+
+    if (exibirCtaCarteira) {
+        const cta = document.createElement('div');
+        cta.className = 'card';
+        cta.style.marginBottom = '0.75rem';
+        cta.style.borderLeft = '4px solid var(--success)';
+        cta.innerHTML = `
+            <p style="margin:0; font-size:0.9rem;"><strong>✅ ${ultimaVacinaRegistrada || 'Vacina'} registrada no Histórico Oficial.</strong></p>
+            <p style="margin:0.25rem 0 0.6rem 0; font-size:0.8rem; color:var(--text-secondary);">Você pode continuar no calendário ou abrir a Carteira para conferir.</p>
+            <button type="button" class="btn-primary btn-ver-carteira" style="width:auto; padding:0.5rem 0.85rem; font-size:0.8rem;">Ver na Carteira</button>
+        `;
+
+        const btnVerCarteira = cta.querySelector('.btn-ver-carteira');
+        btnVerCarteira?.addEventListener('click', () => {
+            exibirCtaCarteira = false;
+            const botaoAbaCarteira = document.querySelectorAll('.bottom-nav .nav-item')[2];
+            if (window.mudarAba && botaoAbaCarteira) {
+                window.mudarAba('wallet', botaoAbaCarteira);
+            }
+        });
+
+        container.appendChild(cta);
+    }
 
     const perfilAtivo = appState.perfilAtual || 'principal';
     const perfilInfo = obterPerfilAtivo(perfilAtivo);
@@ -128,15 +153,17 @@ function renderizarListaFiltrada(textoPesquisa) {
                 btnTomei.textContent = 'Salvando...';
 
                 try {
-                    await registrarVacinaPeloCalendario({ nome: nomeVacina });
-                    await carregarDadosDoFirebase();
-                    renderizarListaFiltrada('');
-                    alert('✅ Vacina registrada com sucesso e enviada para o Histórico Oficial na Carteira.');
+                    const registroCriado = await registrarVacinaPeloCalendario({ nome: nomeVacina });
 
-                    const botaoAbaCarteira = document.querySelectorAll('.bottom-nav .nav-item')[2];
-                    if (window.mudarAba && botaoAbaCarteira) {
-                        window.mudarAba('wallet', botaoAbaCarteira);
+                    if (registroCriado && !appState.carteira.some(v => v.id === registroCriado.id)) {
+                        appState.carteira.push(registroCriado);
                     }
+
+                    await carregarDadosDoFirebase();
+                    exibirCtaCarteira = true;
+                    ultimaVacinaRegistrada = nomeVacina;
+                    renderizarListaFiltrada('');
+                    alert('✅ Vacina registrada com sucesso e enviada para o Histórico Oficial.');
                 } catch (error) {
                     console.error('Erro no registro rápido pelo calendário:', error);
                     alert(`❌ Não foi possível registrar a vacina. ${error?.message || 'Tente novamente.'}`);
