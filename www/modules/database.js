@@ -13,7 +13,8 @@ import {
     signInWithPopup,
     EmailAuthProvider,
     reauthenticateWithCredential,
-    updatePassword
+    updatePassword,
+    deleteUser
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
 // Suas chaves oficiais do console ajustadas e sem cortes de texto
@@ -41,7 +42,8 @@ export {
     signInWithPopup,
     EmailAuthProvider,
     reauthenticateWithCredential,
-    updatePassword
+    updatePassword,
+    deleteUser
 };
 
 // Estado global do aplicativo conectado à nuvem (Obrigatório para o app.js)

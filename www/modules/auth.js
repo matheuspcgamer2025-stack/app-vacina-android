@@ -9,11 +9,21 @@ import {
     signInWithPopup,
     EmailAuthProvider,
     reauthenticateWithCredential,
-    updatePassword
+    updatePassword,
+    deleteUser,
+    db
 } from './database.js';
 import { salvarPerfilTitular, obterPerfilTitular } from './profile.js';
 import { parseDateToIso } from './date-input.js';
 import { appConfirm } from './dialogs.js';
+import {
+    collection,
+    deleteDoc,
+    doc,
+    getDocs,
+    query,
+    where
+} from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REGEX_CPF = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
@@ -248,6 +258,35 @@ export async function alterarSenhaUsuarioAtual(senhaAtual, novaSenha) {
     await updatePassword(usuario, novaSenha);
 }
 
+export async function excluirContaUsuarioAtual() {
+    const usuario = auth.currentUser;
+    if (!usuario) {
+        const erro = new Error('Sem usuário autenticado para excluir conta.');
+        erro.code = 'auth/no-current-user';
+        throw erro;
+    }
+
+    const uid = usuario.uid;
+
+    try {
+        const vacinasSnap = await getDocs(query(collection(db, 'vacinas'), where('usuarioUid', '==', uid)));
+        const remocoes = [];
+        vacinasSnap.forEach((documento) => {
+            remocoes.push(deleteDoc(doc(db, 'vacinas', documento.id)));
+        });
+        remocoes.push(deleteDoc(doc(db, 'usuarios', uid)));
+        await Promise.all(remocoes);
+    } catch (_) {
+        // Mesmo que a limpeza em nuvem falhe, tentamos concluir a exclusão da autenticação.
+    }
+
+    await deleteUser(usuario);
+
+    localStorage.removeItem('app_dependentes');
+    localStorage.removeItem('app_perfil_titular');
+    localStorage.removeItem(CHAVE_CONTAS_LOCAIS);
+}
+
 export function inicializarAutentication(onLoginSuccess) {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
@@ -293,6 +332,7 @@ export function inicializarAutentication(onLoginSuccess) {
         };
 
         try {
+            auth.languageCode = 'pt-BR';
             await sendPasswordResetEmail(auth, email, actionCodeSettings);
             alert(`📩 Link de recuperação enviado para ${email}. Verifique caixa de entrada, spam e promoções.`);
         } catch (error) {
@@ -448,6 +488,8 @@ export function inicializarAutentication(onLoginSuccess) {
                     dataNascimento,
                     sexo: sexoAnterior
                 });
+                appState.perfilAtual = 'principal';
+                document.dispatchEvent(new Event('app:perfil-trocado'));
 
                 concluirLogin(
                     credencialWeb?.user?.email || 'usuario_google',
@@ -486,6 +528,8 @@ export function inicializarAutentication(onLoginSuccess) {
                     dataNascimento,
                     sexo: sexoAnterior
                 });
+                appState.perfilAtual = 'principal';
+                document.dispatchEvent(new Event('app:perfil-trocado'));
 
                 concluirLogin(
                     email || auth.currentUser?.email || 'usuario_google',
@@ -512,6 +556,8 @@ export function inicializarAutentication(onLoginSuccess) {
                     dataNascimento,
                     sexo: sexoAnterior
                 });
+                appState.perfilAtual = 'principal';
+                document.dispatchEvent(new Event('app:perfil-trocado'));
 
                 concluirLogin(
                     email || auth.currentUser?.email || 'usuario_google',

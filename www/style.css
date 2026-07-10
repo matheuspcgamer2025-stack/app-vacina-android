@@ -539,7 +539,7 @@ body .card:hover, body .vax-item:hover {
 
 .app-header { 
     background: var(--nav-bg); 
-    padding: 0.9rem 1rem 0.75rem 1rem;
+    padding: 1rem 1rem 0.65rem 1rem;
     display: flex; 
     justify-content: space-between; 
     align-items: center;
@@ -556,6 +556,8 @@ body .card:hover, body .vax-item:hover {
 
 .header-right {
     gap: 0.2rem;
+    align-items: flex-end;
+    padding-top: 0.2rem;
 }
 
 .dashboard-greeting {
@@ -1251,11 +1253,11 @@ body .btn-search {
 
 .sidebar-header #btn-close-sidebar {
     position: absolute;
-    top: 0.45rem;
+    top: 0.85rem;
     right: 0.45rem;
-    font-size: 1.15rem;
-    width: 2rem;
-    height: 2rem;
+    font-size: 1.25rem;
+    width: 2.2rem;
+    height: 2.2rem;
     border-radius: 999px;
     background: var(--bg-app);
 }

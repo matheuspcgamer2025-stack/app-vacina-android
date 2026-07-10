@@ -2,7 +2,7 @@ import { appState } from './database.js';
 import { WHATSAPP_CONFIG, SUPPORT_CONFIG, APP_INFO } from './config.js';
 import { obterPerfilTitular, salvarPerfilTitular } from './profile.js';
 import { parseDateToIso } from './date-input.js';
-import { alterarSenhaUsuarioAtual } from './auth.js';
+import { alterarSenhaUsuarioAtual, excluirContaUsuarioAtual } from './auth.js';
 import { appConfirm } from './dialogs.js';
 
 const REGEX_SENHA = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\S]{8,}$/;
@@ -91,6 +91,7 @@ export function inicializarSidebar() {
     const formTrocaSenha = document.getElementById('sidebar-change-password-form');
     const formSugestao = document.getElementById('sidebar-suggestion-form');
     const botaoWhatsapp = document.getElementById('sidebar-whatsapp-support');
+    const botaoExcluirConta = document.getElementById('sidebar-delete-account');
     if (!sidebar) return;
 
     // Move os painéis para o body para exibir como modal central padronizado
@@ -260,6 +261,38 @@ export function inicializarSidebar() {
 
         if (confirmar) {
             location.reload(); // Recarrega o aplicativo limpando o estado de login
+        }
+    });
+
+    // 9. EXCLUSÃO DE CONTA (EXIGÊNCIA DE PUBLICAÇÃO)
+    botaoExcluirConta?.addEventListener('click', async () => {
+        const confirmarExclusao = await appConfirm('Deseja excluir sua conta permanentemente? Seus dados e histórico serão removidos.', {
+            titulo: 'Excluir conta',
+            textoConfirmar: 'Excluir permanentemente',
+            textoCancelar: 'Cancelar',
+            tipo: 'error'
+        });
+
+        if (!confirmarExclusao) return;
+
+        try {
+            await excluirContaUsuarioAtual();
+            alert('✅ Conta excluída com sucesso.');
+            location.reload();
+        } catch (error) {
+            const codigo = error?.code || '';
+
+            if (codigo === 'auth/requires-recent-login') {
+                alert('⚠️ Por segurança, faça login novamente e repita a exclusão da conta.');
+                return;
+            }
+
+            if (codigo === 'auth/network-request-failed') {
+                alert('❌ Falha de rede ao excluir conta. Verifique sua conexão e tente novamente.');
+                return;
+            }
+
+            alert('❌ Não foi possível excluir a conta agora. Tente novamente em instantes.');
         }
     });
 }
