@@ -58,6 +58,29 @@ function calcularDiferencaDias(dataAlvo) {
     return Math.round((alvo.getTime() - hoje.getTime()) / DIA_MS);
 }
 
+function formatarQuantidade(valor, singular, plural) {
+    return `${valor} ${Math.abs(valor) === 1 ? singular : plural}`;
+}
+
+function formatarDiferencaDiasHumana(dias) {
+    const valor = Number(dias);
+    if (!Number.isFinite(valor)) return null;
+
+    const abs = Math.abs(valor);
+    if (abs < 30) return formatarQuantidade(abs, 'dia', 'dias');
+
+    const meses = Math.floor(abs / 30);
+    if (abs < 365) return formatarQuantidade(meses, 'mês', 'meses');
+
+    const anos = Math.floor(abs / 365);
+    const mesesRestantes = Math.floor((abs % 365) / 30);
+    if (mesesRestantes === 0) {
+        return formatarQuantidade(anos, 'ano', 'anos');
+    }
+
+    return `${formatarQuantidade(anos, 'ano', 'anos')} e ${formatarQuantidade(mesesRestantes, 'mês', 'meses')}`;
+}
+
 function vacinaTomadaNoPerfil(vaxNome, carteiraPerfil) {
     const alvo = String(vaxNome || '').toLowerCase();
     return carteiraPerfil.some(item => String(item?.nome || '').toLowerCase().includes(alvo));
@@ -112,12 +135,13 @@ export function avaliarStatusVacina(vacina, carteiraPerfil, dataNascimento) {
         return {
             tomada: false,
             status: 'atrasada',
-            marcador: `Dose Atrasada ⚠️ (${Math.abs(deltaDias)} dias)` ,
+            marcador: `Dose Atrasada ⚠️ (${formatarDiferencaDiasHumana(deltaDias)})` ,
             dataAlvo,
             dataAlvoIso: dataToIso(dataAlvo),
             dataAlvoBr: formatarDataBR(dataAlvo),
             diasParaDataAlvo: deltaDias,
-            diasAtraso: Math.abs(deltaDias)
+            diasAtraso: Math.abs(deltaDias),
+            diasAtrasoTexto: formatarDiferencaDiasHumana(deltaDias)
         };
     }
 
@@ -130,19 +154,21 @@ export function avaliarStatusVacina(vacina, carteiraPerfil, dataNascimento) {
             dataAlvoIso: dataToIso(dataAlvo),
             dataAlvoBr: formatarDataBR(dataAlvo),
             diasParaDataAlvo: 0,
-            diasAtraso: 0
+            diasAtraso: 0,
+            diasParaDataAlvoTexto: 'hoje'
         };
     }
 
     return {
         tomada: false,
         status: 'agendada',
-        marcador: `Faltam ${deltaDias} dias`,
+        marcador: `Faltam ${formatarDiferencaDiasHumana(deltaDias)}`,
         dataAlvo,
         dataAlvoIso: dataToIso(dataAlvo),
         dataAlvoBr: formatarDataBR(dataAlvo),
         diasParaDataAlvo: deltaDias,
-        diasAtraso: 0
+        diasAtraso: 0,
+        diasParaDataAlvoTexto: formatarDiferencaDiasHumana(deltaDias)
     };
 }
 

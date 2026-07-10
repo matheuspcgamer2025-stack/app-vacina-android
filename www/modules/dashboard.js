@@ -717,9 +717,19 @@ export function inicializarDashboard() {
         if (!agendamento) {
             bannerAgendamento.innerHTML = '🎉 Nenhum agendamento pendente no momento para este perfil.';
         } else if (agendamento.dias < 0) {
-            bannerAgendamento.innerHTML = `Próxima Vacina: <strong>${agendamento.nome}</strong> (${agendamento.perfil})<br>📅 Data: <strong>${formatarDataBr(agendamento.data)}</strong> • ⏳ <strong>Atrasada há ${Math.abs(agendamento.dias)} dias</strong>.`;
+            const atrasoTexto = Math.abs(agendamento.dias) < 30
+                ? `${Math.abs(agendamento.dias)} ${Math.abs(agendamento.dias) === 1 ? 'dia' : 'dias'}`
+                : Math.abs(agendamento.dias) < 365
+                    ? `${Math.floor(Math.abs(agendamento.dias) / 30)} ${Math.floor(Math.abs(agendamento.dias) / 30) === 1 ? 'mês' : 'meses'}`
+                    : `${Math.floor(Math.abs(agendamento.dias) / 365)} ${Math.floor(Math.abs(agendamento.dias) / 365) === 1 ? 'ano' : 'anos'}`;
+            bannerAgendamento.innerHTML = `Próxima Vacina: <strong>${agendamento.nome}</strong> (${agendamento.perfil})<br>📅 Data: <strong>${formatarDataBr(agendamento.data)}</strong> • ⏳ <strong>Atrasada há ${atrasoTexto}</strong>.`;
         } else {
-            bannerAgendamento.innerHTML = `Próxima Vacina: <strong>${agendamento.nome}</strong> (${agendamento.perfil})<br>📅 Data: <strong>${formatarDataBr(agendamento.data)}</strong> • ⏳ <strong>Faltam ${agendamento.dias} dias</strong>.`;
+            const faltamTexto = agendamento.dias < 30
+                ? `${agendamento.dias} ${agendamento.dias === 1 ? 'dia' : 'dias'}`
+                : agendamento.dias < 365
+                    ? `${Math.floor(agendamento.dias / 30)} ${Math.floor(agendamento.dias / 30) === 1 ? 'mês' : 'meses'}`
+                    : `${Math.floor(agendamento.dias / 365)} ${Math.floor(agendamento.dias / 365) === 1 ? 'ano' : 'anos'}`;
+            bannerAgendamento.innerHTML = `Próxima Vacina: <strong>${agendamento.nome}</strong> (${agendamento.perfil})<br>📅 Data: <strong>${formatarDataBr(agendamento.data)}</strong> • ⏳ <strong>Faltam ${faltamTexto}</strong>.`;
         }
     }
 
@@ -780,23 +790,102 @@ export function inicializarDashboard() {
         `;
     }
 
-    const fakeNewsContainer = document.getElementById('dashboard-fakenews-list');
-    if (fakeNewsContainer) {
-        fakeNewsContainer.innerHTML = `
-            <div style="background: var(--bg-app); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem;">
-                <p style="font-weight: bold; color: var(--danger); font-size: 0.875rem;">❌ BOATO: "Vacina da gripe provoca gripe"</p>
-                <p style="font-size: 0.8125rem; color: var(--text-primary); margin-top: 0.25rem;"><strong>🟢 FATO:</strong> A vacina do SUS usa vírus inativado, não causa infecção gripal.</p>
-            </div>
-            <div style="background: var(--bg-app); padding: 0.75rem; border-radius: 0.5rem;">
-                <p style="font-weight: bold; color: var(--danger); font-size: 0.875rem;">❌ BOATO: "Reforços são desnecessários"</p>
-                <p style="font-size: 0.8125rem; color: var(--text-primary); margin-top: 0.25rem;"><strong>🟢 FATO:</strong> Alguns imunizantes, como dT e Covid-19, exigem atualização periódica para manter proteção adequada.</p>
-            </div>
-        `;
-    }
+    renderizarJogoVacinaSemFake();
 
     const notificacoes = montarNotificacoes({ faixa, campanha, contexto: contextoRegional, reforco });
     configurarPainelNotificacoes(notificacoes);
     configurarAcoesRapidas();
     configurarAccordionDashboard();
     configurarReatividadePerfil();
+}
+
+const DESAFIOS_VACINA = [
+    {
+        pergunta: 'A vacina da gripe causa gripe?',
+        resposta: 'fato',
+        explicacao: 'Não. A vacina do SUS usa vírus inativado e não provoca a doença.'
+    },
+    {
+        pergunta: 'Tomar mais de uma vacina no mesmo dia faz mal?',
+        resposta: 'boato',
+        explicacao: 'Em geral, vacinas diferentes podem ser aplicadas no mesmo atendimento quando indicado pela equipe de saúde.'
+    },
+    {
+        pergunta: 'Vacinas podem ser atualizadas ao longo da vida?',
+        resposta: 'fato',
+        explicacao: 'Sim. Algumas vacinas precisam de reforços periódicos para manter a proteção.'
+    },
+    {
+        pergunta: 'Se eu já tive uma doença, nunca mais preciso de vacina?',
+        resposta: 'boato',
+        explicacao: 'Isso depende de cada imunizante e avaliação profissional; vacinas continuam importantes.'
+    }
+];
+
+function renderizarJogoVacinaSemFake() {
+    const container = document.getElementById('dashboard-fakenews-list');
+    if (!container) return;
+
+    const indiceAtual = Number(container.dataset.quizIndex || '0');
+    const acertos = Number(container.dataset.quizScore || '0');
+    const desafio = DESAFIOS_VACINA[indiceAtual % DESAFIOS_VACINA.length];
+
+    container.innerHTML = `
+        <div class="vaccine-game-card">
+            <div class="vaccine-game-header">
+                <div>
+                    <p class="vaccine-game-kicker">🛡️ Vacina Sem Fake</p>
+                    <h3>Jogo do Mito ou Fato</h3>
+                </div>
+                <span class="vaccine-game-score">${acertos} acerto${acertos === 1 ? '' : 's'}</span>
+            </div>
+
+            <p class="vaccine-game-question">${desafio.pergunta}</p>
+
+            <div class="vaccine-game-actions">
+                <button type="button" class="vaccine-game-btn" data-answer="boato">Boato</button>
+                <button type="button" class="vaccine-game-btn" data-answer="fato">Fato</button>
+            </div>
+
+            <div class="vaccine-game-feedback hidden"></div>
+            <div class="vaccine-game-footer">
+                <span>${indiceAtual + 1}/${DESAFIOS_VACINA.length}</span>
+                <button type="button" class="vaccine-game-next btn-secondary hidden">Próxima pergunta</button>
+            </div>
+        </div>
+    `;
+
+    const feedback = container.querySelector('.vaccine-game-feedback');
+    const nextBtn = container.querySelector('.vaccine-game-next');
+    const answerButtons = container.querySelectorAll('.vaccine-game-btn');
+
+    const mostrarFeedback = (acertou) => {
+        if (!feedback) return;
+        feedback.classList.remove('hidden');
+        feedback.innerHTML = acertou
+            ? `✅ Acertou! ${desafio.explicacao}`
+            : `❌ Ainda não. ${desafio.explicacao}`;
+        feedback.className = `vaccine-game-feedback ${acertou ? 'success' : 'error'}`;
+    };
+
+    const avancar = () => {
+        container.dataset.quizIndex = String((indiceAtual + 1) % DESAFIOS_VACINA.length);
+        renderizarJogoVacinaSemFake();
+    };
+
+    answerButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const resposta = btn.getAttribute('data-answer');
+            const acertou = resposta === desafio.resposta;
+            const scoreAtual = Number(container.dataset.quizScore || '0');
+            if (acertou) {
+                container.dataset.quizScore = String(scoreAtual + 1);
+            }
+            mostrarFeedback(acertou);
+            answerButtons.forEach(b => b.disabled = true);
+            if (nextBtn) nextBtn.classList.remove('hidden');
+        });
+    });
+
+    nextBtn?.addEventListener('click', avancar);
 }

@@ -24,12 +24,12 @@ function garantirIndicadorSyncPainel() {
     indicador = document.createElement('div');
     indicador.id = 'dashboard-sync-indicator';
     indicador.className = 'dashboard-sync-indicator hidden';
-    indicador.innerHTML = '<span class="dashboard-sync-spinner" aria-hidden="true"></span><span id="dashboard-sync-text">Sincronizando painel...</span>';
+    indicador.innerHTML = '<span class="dashboard-sync-spinner" aria-hidden="true"></span><span id="dashboard-sync-text">Sincronizando Início...</span>';
     dashboard.prepend(indicador);
     return indicador;
 }
 
-function mostrarIndicadorSync(mensagem = 'Sincronizando painel...') {
+function mostrarIndicadorSync(mensagem = 'Sincronizando Início...') {
     const indicador = garantirIndicadorSyncPainel();
     if (!indicador) return;
 
@@ -185,14 +185,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function atualizarPainelComLeituraLimpa() {
-    // 1 leitura limpa por entrada na aba Painel.
+    // 1 leitura limpa por entrada na aba Início.
     mostrarIndicadorSync('Sincronizando dados mais recentes...');
     try {
         if (appState.usuarioLogado) {
             await carregarDadosDoFirebase();
         }
         inicializarDashboard();
-        marcarIndicadorSyncSucesso('Painel sincronizado');
+        marcarIndicadorSyncSucesso('Início sincronizado');
     } finally {
         ocultarIndicadorSync(650);
     }

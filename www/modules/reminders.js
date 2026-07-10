@@ -81,11 +81,11 @@ export function renderizarLembretes() {
         const content = document.createElement('div');
         content.className = 'reminder-card-content';
         const subtitulo = p.status === 'agendada'
-            ? `Faltam ${p.diasParaDataAlvo} dias · Data alvo ${p.dataAlvoBr}`
+            ? `Faltam ${p.diasParaDataAlvoTexto || `${p.diasParaDataAlvo} dias`} · Data alvo ${p.dataAlvoBr}`
             : p.status === 'hoje'
                 ? `Agendada para hoje (${p.dataAlvoBr})`
                 : p.status === 'atrasada'
-                    ? `⚠️ Alerta: Vacina com atraso de ${p.diasAtraso} dias! Recomenda-se atualizar a carteira de imunização.`
+                    ? `⚠️ Alerta: Vacina com atraso de ${p.diasAtrasoTexto || p.diasAtraso}. Recomenda-se atualizar a carteira de imunização.`
                     : p.dataAlvoBr
                         ? `Agendada para ${p.dataAlvoBr}`
                         : p.recomendacao;
@@ -102,7 +102,7 @@ export function renderizarLembretes() {
             : p.status === 'hoje'
                 ? 'Hoje'
                 : p.status === 'agendada'
-                    ? `Faltam ${p.diasParaDataAlvo} dias`
+                    ? `Faltam ${p.diasParaDataAlvoTexto || `${p.diasParaDataAlvo} dias`}`
                     : (p.dataAlvoBr ? `Agendada para ${p.dataAlvoBr}` : 'Lembrete');
         badge.setAttribute('aria-label', 'Vacina agendada para ser lembrada');
 

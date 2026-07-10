@@ -52,7 +52,7 @@ function renderizarListaFiltrada(textoPesquisa) {
 
         const classeAtrasada = status.status === 'atrasada' ? 'overdue' : '';
         const marcadorAgendamento = status.dataAlvoBr
-            ? (status.status === 'agendada' ? `Faltam ${status.diasParaDataAlvo} dias` : `Agendada para ${status.dataAlvoBr}`)
+            ? (status.status === 'agendada' ? `Faltam ${status.diasParaDataAlvoTexto || `${status.diasParaDataAlvo} dias`}` : `Agendada para ${status.dataAlvoBr}`)
             : `Recomendado: ${vax.recomendacao}`;
         const resumoPerfil = perfilInfo?.dataNascimento
             ? `Perfil: ${perfilInfo.nome} (${formatarIdadeHumana(perfilInfo.dataNascimento)})`
@@ -85,8 +85,8 @@ function renderizarListaFiltrada(textoPesquisa) {
                 <p style="margin-top:4px;">📍 <strong>Via de Aplicação:</strong> ${vax.via}</p>
                 <p style="margin-top:4px; color:#c9302c;">⚠️ <strong>Reações comuns:</strong> ${vax.reacoes}</p>
                 ${status.dataAlvoBr ? `<p style="margin-top:4px;"><strong>📅 Data Alvo Calculada:</strong> ${status.dataAlvoBr}</p>` : ''}
-                ${status.status === 'agendada' ? `<p style="margin-top:4px; color:#0275d8;"><strong>⏱️ Faltam ${status.diasParaDataAlvo} dias.</strong></p>` : ''}
-                ${status.status === 'atrasada' ? `<p style="margin-top:4px; color:var(--danger); font-weight:bold;">⚠️ Vacina com atraso de ${status.diasAtraso} dias.</p>` : ''}
+                ${status.status === 'agendada' ? `<p style="margin-top:4px; color:#0275d8;"><strong>⏱️ Faltam ${status.diasParaDataAlvoTexto || `${status.diasParaDataAlvo} dias`}.</strong></p>` : ''}
+                ${status.status === 'atrasada' ? `<p style="margin-top:4px; color:var(--danger); font-weight:bold;">⚠️ Vacina com atraso de ${status.diasAtrasoTexto || status.diasAtraso}.</p>` : ''}
                 
                 ${!jaTomou ? `<button class="btn-ja-tomei" data-nome="${vax.nome}" style="margin-top:10px; padding:6px; font-size:12px; background:var(--success); color:white; border-radius:5px; width:auto; display:inline-block;">🚀 Já tomei esta vacina</button>` : ''}
             </div>

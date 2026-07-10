@@ -16,18 +16,53 @@
 </head>
 
 <body>
-        <!-- 0. TELA DE ABERTURA (SPLASH SCREEN - ZÉ GOTINHA) -->
+        <!-- 0. TELA DE ABERTURA (SPLASH SCREEN) -->
     <div id="app-splash">
-        <div class="ze-gotinha-logo">
-            <div class="gota-topo"></div>
-            <div class="ze-olhos">
-                <div class="ze-olho"></div>
-                <div class="ze-olho"></div>
-            </div>
-            <div class="ze-sorriso"></div>
+        <div class="splash-heart-mark" aria-hidden="true">
+            <svg viewBox="0 0 128 128" role="img" aria-label="Coração com pulsação integrada">
+                <defs>
+                    <linearGradient id="splashHeartGradient" x1="18" y1="18" x2="110" y2="110" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#7c4dff" />
+                        <stop offset="100%" stop-color="#24d8ff" />
+                    </linearGradient>
+                    <filter id="splashGlow" x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur stdDeviation="3.5" result="blur" />
+                        <feColorMatrix in="blur" type="matrix"
+                            values="1 0 0 0 0
+                                    0 1 0 0 0
+                                    0 0 1 0 0
+                                    0 0 0 0.65 0" result="glow" />
+                        <feMerge>
+                            <feMergeNode in="glow" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+                <path
+                    d="M64 112s-38.5-22.5-50.2-43.9C3.6 49.7 8.9 28.7 26.7 21.1c11.4-4.9 25.1-2.1 33.3 7.5 8.2-9.6 21.9-12.4 33.3-7.5 17.8 7.6 23.1 28.6 12.9 47C102.5 89.5 64 112 64 112z"
+                    fill="rgba(124, 77, 255, 0.12)"
+                    stroke="url(#splashHeartGradient)"
+                    stroke-width="4.5"
+                    stroke-linejoin="round"
+                    filter="url(#splashGlow)" />
+                <path
+                    d="M24 66h15l7-18 10 33 8-16h12l6-10 7 11h13"
+                    fill="none"
+                    stroke="url(#splashHeartGradient)"
+                    stroke-width="5.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    filter="url(#splashGlow)" />
+                <path
+                    d="M14 66h11m78 0h11"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.35)"
+                    stroke-width="3"
+                    stroke-linecap="round" />
+            </svg>
         </div>
         <h2 class="splash-title">Vacina<span class="splash-highlight">App</span></h2>
-        <p class="splash-sub">Carregando histórico seguro...</p>
+        <p class="splash-sub">Cuidando da saúde da sua família...</p>
     </div>
 
 
@@ -260,7 +295,7 @@
                     <p id="faq-1" class="sidebar-faq-answer hidden">O calendário infantil do SUS inclui vacinas como BCG, Hepatite B, Pentavalente, Poliomielite, Tríplice Viral e reforços conforme idade.</p>
 
                     <button class="sidebar-faq-item" type="button" data-target="faq-2">Como saber se estou com vacina pendente?</button>
-                    <p id="faq-2" class="sidebar-faq-answer hidden">No Painel, o app compara sua carteira com o calendário oficial e mostra as vacinas pendentes automaticamente.</p>
+                    <p id="faq-2" class="sidebar-faq-answer hidden">No Início, o app compara sua carteira com o calendário oficial e mostra as vacinas pendentes automaticamente.</p>
 
                     <button class="sidebar-faq-item" type="button" data-target="faq-3">Posso cadastrar dependentes?</button>
                     <p id="faq-3" class="sidebar-faq-answer hidden">Sim. Na aba Carteira, use o botão Novo + para criar e acompanhar o histórico de cada dependente.</p>
@@ -303,9 +338,14 @@
                 <p>Aplicativo de carteira digital de vacinação com foco em controle familiar, alertas e acompanhamento de doses pendentes.</p>
                 <p>Tecnologias: HTML, CSS, JavaScript, Firebase e Capacitor para Android.</p>
                 <p class="sidebar-helper-text">Fluxos exigidos por loja: recuperação de senha por e-mail e exclusão de conta disponíveis nesta versão.</p>
-                <button type="button" id="sidebar-delete-account" class="btn-danger">Excluir Conta</button>
             </div>
         </section>
+
+        <div class="sidebar-danger-zone">
+            <p class="sidebar-danger-zone-title">⚠️ Área crítica da conta</p>
+            <p class="sidebar-danger-zone-text">Remova sua conta e todos os dados vinculados de forma definitiva usando a opção abaixo.</p>
+            <button type="button" id="sidebar-delete-account" class="btn-danger sidebar-danger-button">Excluir Minha Conta</button>
+        </div>
     </aside>
 
     <div id="sidebar-panel-backdrop" class="sidebar-panel-backdrop hidden"></div>
@@ -333,8 +373,7 @@
             <div style="margin-top: 1rem; text-align: left; font-size: 0.875rem; line-height: 1.5;">
                 <p><strong>1. Como cadastrar uma vacina?</strong><br> Vá na aba 'Carteira' no menu inferior, preencha o
                     nome, lote, local e data e clique em salvar.</p>
-                <p style="margin-top: 0.5rem;"><strong>2. Como ver os próximos prazos?</strong><br> No 'Painel
-                    Principal' o sistema calcula automaticamente quais vacinas do SUS ainda faltam no seu histórico.</p>
+                <p style="margin-top: 0.5rem;"><strong>2. Como ver os próximos prazos?</strong><br> Na tela 'Início' o sistema calcula automaticamente quais vacinas do SUS ainda faltam no seu histórico.</p>
                 <p style="margin-top: 0.5rem;"><strong>3. Como achar um posto?</strong><br> Na aba 'Avisos', digite seu
                     bairro ou CEP para listar as Unidades Básicas de Saúde mais próximas.</p>
             </div>
@@ -436,25 +475,6 @@
                     </div>
                 </div>
 
-                <!-- 1. Banner de Próximo Agendamento -->
-                <div class="card next-schedule-card" id="dashboard-next-schedule-banner">
-                    <h3>⏱️ Próximo Agendamento</h3>
-                    <p id="dashboard-next-schedule-text">Carregando próxima dose...</p>
-                </div>
-
-                <!-- 2. Bloco de Cobertura Geral -->
-                <div class="card summary-card">
-                    <div class="summary-header-row">
-                        <h3>Status do Histórico</h3>
-                        <span id="dashboard-progress-badge" class="dashboard-progress-badge">0%</span>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar" id="dashboard-progress"></div>
-                    </div>
-                    <p id="dashboard-text">Carregando informações...</p>
-                    <p id="dashboard-goal-text" class="dashboard-goal-text">Definindo meta de imunização para seu perfil...</p>
-                </div>
-
                 <!-- 3. Atalhos de Ação Rápida -->
                 <div class="card quick-actions-card">
                     <div class="quick-actions-row">
@@ -475,6 +495,25 @@
                             <span class="quick-action-label">Bula Rápida</span>
                         </button>
                     </div>
+                </div>
+
+                <!-- 1. Banner de Próximo Agendamento -->
+                <div class="card next-schedule-card" id="dashboard-next-schedule-banner">
+                    <h3>⏱️ Próximo Agendamento</h3>
+                    <p id="dashboard-next-schedule-text">Carregando próxima dose...</p>
+                </div>
+
+                <!-- 2. Bloco de Cobertura Geral -->
+                <div class="card summary-card">
+                    <div class="summary-header-row">
+                        <h3>Status do Histórico</h3>
+                        <span id="dashboard-progress-badge" class="dashboard-progress-badge">0%</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="dashboard-progress"></div>
+                    </div>
+                    <p id="dashboard-text">Carregando informações...</p>
+                    <p id="dashboard-goal-text" class="dashboard-goal-text">Definindo meta de imunização para seu perfil...</p>
                 </div>
 
                 <!-- 4. Alertas de Próximas Vacinas por Faixa Etária -->
@@ -773,7 +812,7 @@
 
         <!-- BARRA DE NAVEGAÇÃO INFERIOR HORIZONTAL -->
         <nav class="bottom-nav">
-            <button class="nav-item active" onclick="mudarAba('dashboard', this)">📊<br>Painel</button>
+            <button class="nav-item active" onclick="mudarAba('dashboard', this)">🏠<br>Início</button>
             <button class="nav-item" onclick="mudarAba('calendar', this)">📅<br>Calendário</button>
             <button class="nav-item" onclick="mudarAba('wallet', this)">💳<br>Carteira</button>
             <button class="nav-item" onclick="mudarAba('reminders', this)">🔔<br>Avisos</button>
