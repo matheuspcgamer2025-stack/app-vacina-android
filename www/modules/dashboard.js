@@ -796,12 +796,11 @@ export function inicializarDashboard() {
         `;
     }
 
-    renderizarJogoVacinaSemFake();
-
     const notificacoes = montarNotificacoes({ faixa, campanha, contexto: contextoRegional, reforco });
     configurarPainelNotificacoes(notificacoes);
     configurarAcoesRapidas();
     configurarAccordionDashboard();
+    renderizarJogoVacinaSemFake();
     configurarReatividadePerfil();
 }
 
