@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <!-- Substitua a linha do viewport atual por esta no seu <head>: -->
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <title>VacinaApp - Carteira Digital</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="style.css">
+    <!-- Biblioteca jsPDF para geração de PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="vendor/dayjs.min.js" defer></script>
+    <script src="vendor/lucide.min.js" defer></script>
+    <script src="app.js" defer type="module"></script>
+</head>
+
+<body>
+        <!-- 0. TELA DE ABERTURA (SPLASH SCREEN) -->
+    <div id="app-splash">
+        <div class="splash-heart-mark" aria-hidden="true">
+            <svg viewBox="0 0 128 128" role="img" aria-label="Coração com pulsação integrada">
+                <defs>
+                    <linearGradient id="splashHeartGradient" x1="18" y1="18" x2="110" y2="110" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#7c4dff" />
+                        <stop offset="100%" stop-color="#24d8ff" />
+                    </linearGradient>
+                    <filter id="splashGlow" x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur stdDeviation="3.5" result="blur" />
+                        <feColorMatrix in="blur" type="matrix"
+                            values="1 0 0 0 0
+                                    0 1 0 0 0
+                                    0 0 1 0 0
+                                    0 0 0 0.65 0" result="glow" />
+                        <feMerge>
+                            <feMergeNode in="glow" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+                <path
+                    d="M64 112s-38.5-22.5-50.2-43.9C3.6 49.7 8.9 28.7 26.7 21.1c11.4-4.9 25.1-2.1 33.3 7.5 8.2-9.6 21.9-12.4 33.3-7.5 17.8 7.6 23.1 28.6 12.9 47C102.5 89.5 64 112 64 112z"
+                    fill="rgba(124, 77, 255, 0.12)"
+                    stroke="url(#splashHeartGradient)"
+                    stroke-width="4.5"
+                    stroke-linejoin="round"
+                    filter="url(#splashGlow)" />
+                <path
+                    d="M24 66h15l7-18 10 33 8-16h12l6-10 7 11h13"
+                    fill="none"
+                    stroke="url(#splashHeartGradient)"
+                    stroke-width="5.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    filter="url(#splashGlow)" />
+                <path
+                    d="M14 66h11m78 0h11"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.35)"
+                    stroke-width="3"
+                    stroke-linecap="round" />
+            </svg>
+        </div>
+        <h2 class="splash-title">Vacina<span class="splash-highlight">App</span></h2>
+        <p class="splash-sub">Cuidando da saúde da sua família...</p>
+    </div>
+
+
+
+    <!-- 1. TELA DE LOGIN -->
+    <section id="screen-login" class="screen active">
+        <div class="login-container">
+            <div class="header-actions">
+                <button class="btn-theme-toggle">🌓</button>
+            </div>
+            <div class="logo">🛡️ VacinaApp</div>
+            <h2>Identificação Segura</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-identificador">CPF ou E-mail</label>
+                    <input type="text" id="login-identificador" placeholder="Digite seu CPF ou e-mail" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-senha">Senha</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="login-senha" class="password-input" placeholder="Digite sua senha" required>
+                        <button type="button" class="btn-password-toggle" data-target="login-senha" aria-label="Mostrar senha">
+                            <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group form-inline-link">
+                    <a href="#" id="link-esqueci-senha" class="link-reset-password">Esqueci minha senha</a>
+                </div>
+                <button type="submit" class="btn-primary">Entrar com Segurança</button>
+
+                <div style="height:0.5rem"></div>
+
+                <button type="button" id="btn-google-signin" class="btn-google" aria-label="Entrar com o Google">
+                    <span class="google-icon" aria-hidden="true">G</span>
+                    Entrar com o Google
+                </button>
+            </form>
+            <p class="switch-text">Não tem conta? <a href="#" id="link-cadastro">Cadastre-se aqui</a></p>
+        </div>
+    </section>
+
+    <!-- 2. TELA DE CADASTRO -->
+    <section id="screen-register" class="screen hidden">
+        <div class="login-container">
+            <div class="header-actions">
+                <button class="btn-theme-toggle">🌓</button>
+            </div>
+            <div class="logo">🛡️ VacinaApp</div>
+            <h2>Criar Nova Conta</h2>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-nome-completo">Nome Completo</label>
+                    <input type="text" id="register-nome-completo" placeholder="Digite seu nome completo" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-data-nascimento">Data de Nascimento</label>
+                    <input type="text" id="register-data-nascimento" class="typed-date-input" maxlength="10" required>
+                </div>
+                <div class="form-group">
+                    <label>Sexo</label>
+                    <div class="gender-options">
+                        <label class="gender-option" for="register-sexo-feminino">
+                            <input type="radio" id="register-sexo-feminino" name="register-sexo" value="Feminino" required>
+                            Feminino
+                        </label>
+                        <label class="gender-option" for="register-sexo-masculino">
+                            <input type="radio" id="register-sexo-masculino" name="register-sexo" value="Masculino" required>
+                            Masculino
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="register-identificador">Definir CPF ou E-mail</label>
+                    <input type="text" id="register-identificador" placeholder="Digite o CPF ou e-mail para a conta"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label for="register-senha">Criar Senha</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="register-senha" class="password-input" placeholder="Crie uma senha forte" required>
+                        <button type="button" class="btn-password-toggle" data-target="register-senha" aria-label="Mostrar senha">
+                            <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirmar-senha">Confirmar Senha</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="register-confirmar-senha" class="password-input" placeholder="Repita a senha criada" required>
+                        <button type="button" class="btn-password-toggle" data-target="register-confirmar-senha" aria-label="Mostrar senha">
+                            <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                    <small class="password-requirements">
+                        🔒 Requisitos da Senha: Mínimo 8 caracteres, contendo pelo menos uma letra maiúscula, uma
+                        minúscula e um número.
+                    </small>
+                </div>
+                <div class="form-group terms-group">
+                    <label class="terms-option" for="register-aceite-termos">
+                        <input type="checkbox" id="register-aceite-termos" required>
+                        <span>Li e aceito os <a href="#" id="link-termos-uso">Termos de Uso</a> e a <a href="#" id="link-politica-privacidade">Política de Privacidade</a>.</span>
+                    </label>
+                </div>
+                <button type="submit" class="btn-success">Cadastrar e Entrar</button>
+            </form>
+            <p class="switch-text">Já tem uma conta? <a href="#" id="link-login">Faça login aqui</a></p>
+        </div>
+    </section>
+
+    <!-- ABA LATERAL (NAVIGATION DRAWER) -->
+    <aside id="app-sidebar" class="sidebar hidden">
+        <div class="sidebar-header">
+            <button id="btn-close-sidebar" class="btn-icon">✕</button>
+            <h3 id="sidebar-username">matheuspcgamer2025</h3>
+            <p class="sidebar-sub">Usuário VacinaApp</p>
+            <p class="sidebar-sub text-muted">Unidade Básica de Saúde 1</p>
+        </div>
+
+        <nav class="sidebar-menu">
+            <button class="sidebar-item" data-target="sidebar-panel-editar-perfil" id="menu-editar-perfil">
+                <span class="icon">👤</span> Editar Perfil
+            </button>
+            <button class="sidebar-item" data-target="sidebar-panel-alterar-senha" id="menu-alterar-senha">
+                <span class="icon">🔒</span> Alterar Senha
+            </button>
+            <button class="sidebar-item" data-target="sidebar-panel-ajuda-suporte" id="menu-ajuda-suporte">
+                <span class="icon">❓</span> Ajuda e Suporte
+            </button>
+            <button class="sidebar-item" data-target="sidebar-panel-enviar-sugestao" id="menu-enviar-sugestao">
+                <span class="icon">💡</span> Enviar Sugestão
+            </button>
+            <button class="sidebar-item" data-target="sidebar-panel-sobre" id="menu-sobre-app">
+                <span class="icon">ℹ️</span> Sobre
+            </button>
+            <button class="sidebar-item btn-sair" id="menu-sair">
+                <span class="icon">🚪</span> Sair da Conta
+            </button>
+        </nav>
+
+        <section class="sidebar-content">
+            <div id="sidebar-panel-editar-perfil" class="sidebar-panel hidden">
+                <div class="sidebar-panel-titlebar">
+                    <h4>👤 Perfil do Usuário Principal</h4>
+                    <button type="button" class="sidebar-panel-close" aria-label="Fechar painel">✕</button>
+                </div>
+                <form id="sidebar-edit-profile-form">
+                    <div class="form-group">
+                        <label for="sidebar-profile-nome-completo">Nome Completo</label>
+                        <input type="text" id="sidebar-profile-nome-completo" placeholder="Digite seu nome completo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sidebar-profile-data-nascimento">Data de Nascimento</label>
+                        <input type="text" id="sidebar-profile-data-nascimento" class="typed-date-input" maxlength="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sidebar-profile-sexo">Sexo</label>
+                        <select id="sidebar-profile-sexo" required>
+                            <option value="Feminino">Feminino</option>
+                            <option value="Masculino">Masculino</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">Salvar Alterações</button>
+                </form>
+            </div>
+
+            <div id="sidebar-panel-alterar-senha" class="sidebar-panel hidden">
+                <div class="sidebar-panel-titlebar">
+                    <h4>🔒 Alterar Senha</h4>
+                    <button type="button" class="sidebar-panel-close" aria-label="Fechar painel">✕</button>
+                </div>
+                <form id="sidebar-change-password-form">
+                    <div class="form-group">
+                        <label for="sidebar-senha-atual">Senha Atual</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="sidebar-senha-atual" class="password-input" placeholder="Digite sua senha atual" required>
+                            <button type="button" class="btn-password-toggle" data-target="sidebar-senha-atual" aria-label="Mostrar senha">
+                                <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="sidebar-senha-nova">Nova Senha</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="sidebar-senha-nova" class="password-input" placeholder="Digite a nova senha" required>
+                            <button type="button" class="btn-password-toggle" data-target="sidebar-senha-nova" aria-label="Mostrar senha">
+                                <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="sidebar-senha-confirmar">Confirmar Nova Senha</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="sidebar-senha-confirmar" class="password-input" placeholder="Repita a nova senha" required>
+                            <button type="button" class="btn-password-toggle" data-target="sidebar-senha-confirmar" aria-label="Mostrar senha">
+                                <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Alterar Senha</button>
+                </form>
+            </div>
+
+            <div id="sidebar-panel-ajuda-suporte" class="sidebar-panel hidden">
+                <div class="sidebar-panel-titlebar">
+                    <h4>❓ Ajuda e Suporte</h4>
+                    <button type="button" class="sidebar-panel-close" aria-label="Fechar painel">✕</button>
+                </div>
+                <div class="sidebar-faq-list">
+                    <button class="sidebar-faq-item" type="button" data-target="faq-1">Quais vacinas são obrigatórias no calendário infantil?</button>
+                    <p id="faq-1" class="sidebar-faq-answer hidden">O calendário infantil do SUS inclui vacinas como BCG, Hepatite B, Pentavalente, Poliomielite, Tríplice Viral e reforços conforme idade.</p>
+
+                    <button class="sidebar-faq-item" type="button" data-target="faq-2">Como saber se estou com vacina pendente?</button>
+                    <p id="faq-2" class="sidebar-faq-answer hidden">No Início, o app compara sua carteira com o calendário oficial e mostra as vacinas pendentes automaticamente.</p>
+
+                    <button class="sidebar-faq-item" type="button" data-target="faq-3">Posso cadastrar dependentes?</button>
+                    <p id="faq-3" class="sidebar-faq-answer hidden">Sim. Na aba Carteira, use o botão Novo + para criar e acompanhar o histórico de cada dependente.</p>
+                </div>
+                <div class="sidebar-contact-card">
+                    <p>Precisa de atendimento direto?</p>
+                    <button id="sidebar-whatsapp-support" type="button" class="btn-success">💬 Entrar em contato via WhatsApp</button>
+                </div>
+            </div>
+
+            <div id="sidebar-panel-enviar-sugestao" class="sidebar-panel hidden">
+                <div class="sidebar-panel-titlebar">
+                    <h4>💡 Enviar Sugestão</h4>
+                    <button type="button" class="sidebar-panel-close" aria-label="Fechar painel">✕</button>
+                </div>
+                <p class="sidebar-helper-text">Sua opinião é muito importante para nós.</p>
+                <form id="sidebar-suggestion-form">
+                    <div class="form-group">
+                        <label for="sidebar-suggestion-name">Nome</label>
+                        <input type="text" id="sidebar-suggestion-name" placeholder="Seu nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sidebar-suggestion-email">E-mail</label>
+                        <input type="email" id="sidebar-suggestion-email" placeholder="Seu e-mail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sidebar-suggestion-message">Sugestão</label>
+                        <textarea id="sidebar-suggestion-message" rows="4" placeholder="Conte sua sugestão para melhorar o app" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">Enviar Sugestão</button>
+                </form>
+            </div>
+
+            <div id="sidebar-panel-sobre" class="sidebar-panel hidden">
+                <div class="sidebar-panel-titlebar">
+                    <h4>ℹ️ Sobre o VacinaApp</h4>
+                    <button type="button" class="sidebar-panel-close" aria-label="Fechar painel">✕</button>
+                </div>
+                <p>Versão 1.0.0</p>
+                <p>Aplicativo de carteira digital de vacinação com foco em controle familiar, alertas e acompanhamento de doses pendentes.</p>
+                <p>Tecnologias: HTML, CSS, JavaScript, Firebase e Capacitor para Android.</p>
+                <p class="sidebar-helper-text">Fluxos exigidos por loja: recuperação de senha por e-mail e exclusão de conta disponíveis nesta versão.</p>
+            </div>
+        </section>
+
+        <div class="sidebar-danger-zone">
+            <p class="sidebar-danger-zone-title">⚠️ Área crítica da conta</p>
+            <p class="sidebar-danger-zone-text">Remova sua conta e todos os dados vinculados de forma definitiva usando a opção abaixo.</p>
+            <button type="button" id="sidebar-delete-account" class="btn-danger sidebar-danger-button">Excluir Minha Conta</button>
+        </div>
+    </aside>
+
+    <div id="sidebar-panel-backdrop" class="sidebar-panel-backdrop hidden"></div>
+
+    <!-- POPUP / MODAL PARA ENVIAR O FEEDBACK -->
+    <div id="modal-feedback" class="modal hidden">
+        <div class="modal-content card">
+            <h3>✉️ Enviar Dúvida ou Feedback</h3>
+            <p>Digite sua mensagem e envie via WhatsApp:</p>
+            <form id="form-feedback">
+                <textarea id="txt-feedback" placeholder="Digite aqui sua dúvida, crítica ou sugestão..." rows="5"
+                    required></textarea>
+                <div class="modal-actions">
+                    <button type="button" id="btn-cancelar-feedback" class="btn-secondary">Cancelar</button>
+                    <button type="button" id="btn-whatsapp-feedback" class="btn-primary">💬 Enviar via WhatsApp</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- POPUP / MODAL PARA OBTER AJUDA -->
+    <div id="modal-ajuda" class="modal hidden">
+        <div class="modal-content card">
+            <h3>❓ Central de Ajuda - VacinaApp</h3>
+            <div style="margin-top: 1rem; text-align: left; font-size: 0.875rem; line-height: 1.5;">
+                <p><strong>1. Como cadastrar uma vacina?</strong><br> Vá na aba 'Carteira' no menu inferior, preencha o
+                    nome, lote, local e data e clique em salvar.</p>
+                <p style="margin-top: 0.5rem;"><strong>2. Como ver os próximos prazos?</strong><br> Na tela 'Início' o sistema calcula automaticamente quais vacinas do SUS ainda faltam no seu histórico.</p>
+                <p style="margin-top: 0.5rem;"><strong>3. Como achar um posto?</strong><br> Na aba 'Avisos', digite seu
+                    bairro ou CEP para listar as Unidades Básicas de Saúde mais próximas.</p>
+            </div>
+            <button id="btn-fechar-ajuda" class="btn-primary" style="margin-top: 1.25rem;">Entendido</button>
+        </div>
+    </div>
+
+    <!-- POPUP / MODAL PARA SOBRE NÓS -->
+    <div id="modal-sobre" class="modal hidden">
+        <div class="modal-content card">
+            <h3>🛡️ Sobre o VacinaApp</h3>
+            <p style="margin-top: 1rem; font-size: 0.875rem; text-align: left; line-height: 1.4;">
+                <strong>Versão:</strong> 1.0.0 (Híbrida)<br>
+                <strong>Tecnologias:</strong> HTML5, CSS3, JavaScript Avançado (esModules) e Android Capacitor.<br><br>
+                Este aplicativo foi desenvolvido para facilitar o controle pessoal de imunização dos cidadãos. Todos os
+                dados coletados de feedbacks e cadastros permanecem protegidos localmente e sob as diretrizes de
+                segurança de dados em nuvem.
+            </p>
+            <button id="btn-fechar-sobre" class="btn-primary" style="margin-top: 1.25rem;">Fechar</button>
+        </div>
+    </div>
+
+    <div id="modal-google-birthdate" class="modal hidden">
+        <div class="modal-content card">
+            <h3>🎂 Confirmar Data de Nascimento</h3>
+            <p>Para continuar com sua conta Google, informe sua data de nascimento.</p>
+            <form id="modal-google-birthdate-form">
+                <div class="form-group">
+                    <label for="google-birthdate-input">Data de nascimento</label>
+                    <input type="text" id="google-birthdate-input" class="typed-date-input" maxlength="10" placeholder="dd/mm/aaaa" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="btn-google-birthdate-cancel" class="btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn-primary">Continuar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-dialog-modal" class="modal hidden">
+        <div class="modal-content card app-dialog-content">
+            <div class="app-dialog-title-row">
+                <h3 id="app-dialog-title">Aviso</h3>
+                <button id="app-dialog-close" type="button" class="app-dialog-close" aria-label="Fechar">✕</button>
+            </div>
+            <p id="app-dialog-message"></p>
+            <div class="modal-actions app-dialog-actions">
+                <button id="app-dialog-cancel" type="button" class="btn-secondary hidden">Cancelar</button>
+                <button id="app-dialog-confirm" type="button" class="btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ESTRUTURA PRINCIPAL DO APP (Aparece após o Login) -->
+    <div id="app-main" class="hidden">
+        <!-- CABEÇALHO OFICIAL -->
+        <header class="app-header">
+            <div class="header-left">
+                <p id="dashboard-greeting" class="dashboard-greeting">Olá, Usuário</p>
+            </div>
+            <div class="header-right">
+                <!-- Tema, alertas e perfil em linha compacta -->
+                <button id="main-theme-toggle" class="btn-theme-toggle" aria-label="Alternar tema">🌓</button>
+                <button id="btn-dashboard-notifications" class="btn-icon btn-notification" aria-label="Abrir central de notificações">
+                    <span>🔔</span>
+                    <span id="notification-dot" class="notification-dot hidden"></span>
+                </button>
+                <button id="btn-menu-hamburger" class="btn-icon" aria-label="Abrir menu de perfil">👤</button>
+            </div>
+        </header>
+
+        <aside id="dashboard-notification-panel" class="notification-panel hidden">
+            <div class="notification-panel-header">
+                <h3>🔔 Central de Notificações</h3>
+                <button id="btn-close-notifications" class="btn-icon" aria-label="Fechar notificações">✕</button>
+            </div>
+            <ul id="dashboard-notification-list" class="notification-list"></ul>
+        </aside>
+
+
+        <!-- CONTEÚDO SCROLLÁVEL DO APLICATIVO -->
+        <main class="app-content">
+            <!-- 2. PAINEL PRINCIPAL (DASHBOARD TOTALMENTE EXPANSÍVEL) -->
+            <section id="screen-dashboard" class="sub-screen active">
+
+                <div class="dashboard-headline-row">
+                    <h2 id="dashboard-main-title">Acompanhe as vacinas da sua família</h2>
+                </div>
+
+                <div class="dashboard-counters-row">
+                    <button id="dashboard-counter-dependentes-card" class="dashboard-counter-card" type="button" aria-label="Abrir detalhes de dependentes">
+                        <p id="dashboard-counter-dependentes" class="dashboard-counter-value">0 Dependentes</p>
+                    </button>
+                    <button id="dashboard-counter-pendentes-card" class="dashboard-counter-card" type="button" aria-label="Abrir pendências de vacinação">
+                        <p id="dashboard-counter-pendentes" class="dashboard-counter-value">0 Pendentes</p>
+                    </button>
+                    <button id="dashboard-counter-aplicadas-card" class="dashboard-counter-card" type="button" aria-label="Abrir histórico de vacinas aplicadas">
+                        <p id="dashboard-counter-aplicadas" class="dashboard-counter-value">0 Aplicadas</p>
+                    </button>
+                </div>
+
+                <!-- 3. Atalhos de Ação Rápida -->
+                <div class="card quick-actions-card">
+                    <div class="quick-actions-row">
+                        <button id="quick-action-dependente" class="quick-action-btn" type="button" aria-label="Adicionar dependente">
+                            <span class="quick-action-icon">👤</span>
+                            <span class="quick-action-label">+ Dependente</span>
+                        </button>
+                        <button id="quick-action-posto" class="quick-action-btn" type="button" aria-label="Buscar posto de saúde">
+                            <span class="quick-action-icon">🗺️</span>
+                            <span class="quick-action-label">Buscar Posto</span>
+                        </button>
+                        <button id="quick-action-pdf" class="quick-action-btn" type="button" aria-label="Exportar carteira em PDF">
+                            <span class="quick-action-icon">📄</span>
+                            <span class="quick-action-label">Exportar PDF</span>
+                        </button>
+                        <button id="quick-action-bula" class="quick-action-btn" type="button" aria-label="Buscar bula rápida">
+                            <span class="quick-action-icon">🔍</span>
+                            <span class="quick-action-label">Bula Rápida</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 1. Banner de Próximo Agendamento -->
+                <div class="card next-schedule-card" id="dashboard-next-schedule-banner">
+                    <h3>⏱️ Próximo Agendamento</h3>
+                    <p id="dashboard-next-schedule-text">Carregando próxima dose...</p>
+                </div>
+
+                <!-- 2. Bloco de Cobertura Geral -->
+                <div class="card summary-card">
+                    <div class="summary-header-row">
+                        <h3>Status do Histórico</h3>
+                        <span id="dashboard-progress-badge" class="dashboard-progress-badge">0%</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="dashboard-progress"></div>
+                    </div>
+                    <p id="dashboard-text">Carregando informações...</p>
+                    <p id="dashboard-goal-text" class="dashboard-goal-text">Definindo meta de imunização para seu perfil...</p>
+                </div>
+
+                <!-- 4. Alertas de Próximas Vacinas por Faixa Etária -->
+                <div class="card alerts-card">
+                    <h3 class="dashboard-section-title">
+                        <span>Próximas Vacinas Sugeridas pelo SUS</span>
+                    </h3>
+                    <div id="dashboard-alerts-list" class="dashboard-alerts-grid"></div>
+                </div>
+
+                <!-- 8. Bloco de Estatísticas da Família -->
+                <div class="card accordion-card" data-target="dashboard-family-list">
+                    <div class="accordion-header">
+                        <h3>📈 Métricas da Saúde Familiar</h3>
+                        <span class="accordion-arrow">▼</span>
+                    </div>
+                    <div id="dashboard-family-list" class="accordion-content hidden"></div>
+                </div>
+
+                <!-- 9. Bloco de Combate a Fake News -->
+                <div class="card accordion-card" data-target="dashboard-fakenews-list">
+                    <div class="accordion-header">
+                        <h3>🛡️ Vacina Sem Fake - Fato ou Boato?</h3>
+                        <span class="accordion-arrow">▼</span>
+                    </div>
+                    <div id="dashboard-fakenews-list" class="accordion-content hidden"></div>
+                </div>
+
+            </section>
+
+
+            <!-- 3. CALENDÁRIO DE VACINAS -->
+            <!-- 3. CALENDÁRIO DE VACINAS -->
+            <section id="screen-calendar" class="sub-screen hidden">
+
+                <!-- Nova Barra de Pesquisa de Vacinas -->
+                <div class="card search-vax-card" style="margin-bottom: 1rem;">
+                    <input type="text" id="input-busca-calendario"
+                        placeholder="🔍 Procurar vacina por nome (Ex: BCG, Penta...)" style="margin-bottom: 0;">
+                </div>
+
+                <!-- Abas de Filtro por Idade (Apenas uma vez) -->
+                <div class="filter-tabs">
+                    <button class="tab-btn active" onclick="filtrarCalendario('criança')">Criança</button>
+                    <button class="tab-btn" onclick="filtrarCalendario('adolescente')">Adolescente</button>
+                    <button class="tab-btn" onclick="filtrarCalendario('adulto')">Adulto</button>
+                    <button class="tab-btn" onclick="filtrarCalendario('idoso')">Idoso</button>
+                </div>
+
+                <!-- Container onde a lista de vacinas será injetada (Apenas uma vez) -->
+                <div id="calendar-list" class="list-container"></div>
+
+            </section>
+
+
+            <!-- 4. CARTEIRA DIGITAL -->
+            <section id="screen-wallet" class="sub-screen hidden">
+
+                <!-- Seleção de Perfis/Dependentes -->
+                <div class="card profile-card">
+                    <label for="select-dependente" style="font-weight: bold; font-size: 0.875rem;">📋 Selecionar
+                        Carteira:</label>
+                    <div class="search-box">
+                        <select id="select-dependente" style="margin-bottom: 0; flex: 1;">
+                            <option value="principal">Minha Carteira (Titular)</option>
+                        </select>
+                        <button id="btn-add-dependente" class="btn-success btn-search" type="button">Novo +</button>
+                        <button id="btn-remove-dependente" class="btn-danger btn-search" type="button" style="background-color: var(--danger); display: none;">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="card dependentes-card">
+                    <h3>👨‍👩‍👧 Perfis de Dependentes</h3>
+                    <ul id="dependentes-list" class="dependentes-list"></ul>
+
+                    <form id="dependente-form" class="hidden" style="margin-top: 1rem;">
+                        <input type="hidden" id="dependente-id">
+                        <div class="form-group">
+                            <label for="dependente-nome">Nome</label>
+                            <input type="text" id="dependente-nome" placeholder="Nome completo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dependente-data-nascimento">Data de Nascimento</label>
+                            <input type="text" id="dependente-data-nascimento" class="typed-date-input" maxlength="10" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dependente-sexo">Sexo</label>
+                            <select id="dependente-sexo">
+                                <option value="Feminino">Feminino</option>
+                                <option value="Masculino">Masculino</option>
+                            </select>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" id="btn-cancelar-dependente" class="btn-secondary">Cancelar</button>
+                            <button type="submit" class="btn-success">Salvar Alterações 💾</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Formulário de Registro de Vacina -->
+                <div class="card form-card">
+                    <h3>Registrar Vacina Aplicada</h3>
+                    <form id="wallet-form">
+                        <div class="form-group">
+                            <select id="vax-nome" required>
+                                <option value="" disabled selected>Escolha a Vacina...</option>
+                                <option value="Hepatite B (Múltiplas Doses)">Hepatite B (Exige Reforço em 30 dias)
+                                </option>
+                                <option value="Tríplice Viral (Múltiplas Doses)">Tríplice Viral (Exige Reforço em 30
+                                    dias)</option>
+                                <option value="BCG (Dose Única)">BCG (Dose Única)</option>
+                                <option value="Influenza (Dose Anual)">Influenza (Dose Anual)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="vax-lote" placeholder="Número do Lote" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="vax-local" placeholder="Local de Aplicação (Ex: UBS Centro)"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="vax-data" class="typed-date-input" maxlength="10" required>
+                        </div>
+                        <button type="submit" class="btn-success">Adicionar à Carteira</button>
+                    </form>
+                </div>
+
+                <!-- Listagem do Histórico e Botão de PDF -->
+                <h3>Histórico Oficial</h3>
+                <div id="wallet-list" class="list-container"></div>
+            </section>
+
+            <!-- 5. INFORMAÇÕES ÚTEIS & TELEFONES DE EMERGÊNCIA -->
+            <section id="screen-useful-info" class="sub-screen hidden">
+                <!-- Seção de Telefones de Emergência -->
+                <div class="card emergency-card">
+                    <h3>🚨 Telefones de Emergência</h3>
+                    <div class="info-item">
+                        <span class="label">SAMU</span>
+                        <span class="value">📞 192</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Disque Saúde (SUS)</span>
+                        <span class="value">📞 136</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Polícia</span>
+                        <span class="value">📞 190</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Bombeiros</span>
+                        <span class="value">📞 193</span>
+                    </div>
+                </div>
+
+                <!-- Seção de Informações Gerais do SUS -->
+                <div class="card sus-info-card">
+                    <h3>🏥 Informações do SUS</h3>
+                    <div class="accordion-card" data-target="sus-info-calendarios">
+                        <div class="accordion-header">
+                            <h4>📅 Calendário de Vacinação Oficial</h4>
+                            <span class="accordion-arrow">▼</span>
+                        </div>
+                        <div id="sus-info-calendarios" class="accordion-content hidden">
+                            <p><strong>Crianças:</strong> Vacinação desde o nascimento até 5 anos completos.</p>
+                            <p><strong>Adolescentes:</strong> Atualização de vacinas até 19 anos.</p>
+                            <p><strong>Adultos:</strong> Reforços conforme protocolos SUS.</p>
+                            <p><strong>Idosos:</strong> Vacinas específicas para 60+ anos.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-card" data-target="sus-info-orientacoes">
+                        <div class="accordion-header">
+                            <h4>📋 Orientações Importantes</h4>
+                            <span class="accordion-arrow">▼</span>
+                        </div>
+                        <div id="sus-info-orientacoes" class="accordion-content hidden">
+                            <p>• <strong>Leve a carteira:</strong> Apresente a carteira de vacinação em cada vacinação.</p>
+                            <p>• <strong>Sem jejum:</strong> Não é necessário jejum para tomar qualquer vacina.</p>
+                            <p>• <strong>Repouso:</strong> Evite atividades extenuantes nos 2 dias após vacinação.</p>
+                            <p>• <strong>Efeitos esperados:</strong> Dor leve no local, febre baixa e irritabilidade são normais.</p>
+                            <p>• <strong>Contraindicações:</strong> Comunique ao enfermeiro sobre alergias e medicamentos em uso.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-card" data-target="sus-info-direitos">
+                        <div class="accordion-header">
+                            <h4>⚖️ Seus Direitos no SUS</h4>
+                            <span class="accordion-arrow">▼</span>
+                        </div>
+                        <div id="sus-info-direitos" class="accordion-content hidden">
+                            <p>• Acesso universal e gratuito a todas as vacinas.</p>
+                            <p>• Atendimento respeitoso e humanizado.</p>
+                            <p>• Carteira de vacinação sem custo.</p>
+                            <p>• Informações claras sobre cada vacina.</p>
+                            <p>• Reclamações podem ser feitas ao órgão de saúde local.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-card" data-target="sus-info-apps">
+                        <div class="accordion-header">
+                            <h4>📱 Aplicativos e Portais do SUS</h4>
+                            <span class="accordion-arrow">▼</span>
+                        </div>
+                        <div id="sus-info-apps" class="accordion-content hidden">
+                            <p><strong>ConnectSUS:</strong> Visualize seu histórico de vacinação oficial no Sistema Único de Saúde.</p>
+                            <p><strong>Meu SUS Digital:</strong> Acesse serviços e agendamentos de saúde.</p>
+                            <p><strong>Saúde Brasil:</strong> Informações epidemiológicas e alertas de saúde pública.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Dicas de Saúde -->
+                <div class="card tips-card">
+                    <h3>💡 Dicas de Prevenção</h3>
+                    <div class="tip-item">
+                        <p>🧼 <strong>Higiene das mãos:</strong> Lave com frequência para evitar doenças transmissíveis.</p>
+                    </div>
+                    <div class="tip-item">
+                        <p>😷 <strong>Máscaras:</strong> Use em locais com aglomeração ou se estiver resfriado.</p>
+                    </div>
+                    <div class="tip-item">
+                        <p>💉 <strong>Mantenha carteira atualizada:</strong> Vacinas protegem você e a comunidade.</p>
+                    </div>
+                    <div class="tip-item">
+                        <p>🏃 <strong>Atividade física:</strong> Exercício regular fortalece a imunidade.</p>
+                    </div>
+                    <div class="tip-item">
+                        <p>🥗 <strong>Alimentação saudável:</strong> Frutas, vegetais e proteína fortalecem o sistema imunológico.</p>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- 6. LEMBRETES & NOTIFICAÇÕES -->
+            <section id="screen-reminders" class="sub-screen hidden">
+                <div class="card search-card">
+                    <h3>📍 Encontrar Posto de Vacinação</h3>
+                    <p>Digite seu bairro ou CEP para listar as Unidades Básicas de Saúde (UBS) mais próximas.</p>
+                    <div class="search-box">
+                        <input type="text" id="input-busca-local" placeholder="Ex: Centro, Messejana ou CEP">
+                        <button id="btn-buscar-posto" class="btn-success btn-search">Buscar</button>
+                    </div>
+                    <div class="search-actions">
+                        <label for="filtro-raio-km" class="radius-label">Raio de busca por localização</label>
+                        <select id="filtro-raio-km" class="radius-select">
+                            <option value="0">Todos os postos</option>
+                            <option value="5">Até 5 km</option>
+                            <option value="10" selected>Até 10 km</option>
+                            <option value="20">Até 20 km</option>
+                        </select>
+                        <button id="btn-ativar-localizacao" class="btn-primary" type="button">📍 Ativar localização e ver postos mais próximos</button>
+                    </div>
+                    <div id="lista-postos-resultados" class="results-container"></div>
+                </div>
+
+                <div class="card notify-card">
+                    <h3>Configurar Notificações Push</h3>
+                    <p>Ative os lembretes para o celular te avisar nos dias corretos das suas próximas doses.</p>
+                    <button id="btn-toggle-notifications" class="btn-primary" onclick="configurarNotificacoes()">🔔
+                        Ativar Alertas no Android</button>
+                </div>
+                <div class="card">
+                    <h3>Meus Lembretes Ativos</h3>
+                    <div id="reminders-today-banner" class="today-vax-banner hidden"></div>
+                    <ul id="reminders-list" class="reminder-items"></ul>
+                </div>
+            </section>
+        </main>
+
+        <!-- BARRA DE NAVEGAÇÃO INFERIOR HORIZONTAL -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="mudarAba('dashboard', this)">🏠<br>Início</button>
+            <button class="nav-item" onclick="mudarAba('calendar', this)">📅<br>Calendário</button>
+            <button class="nav-item" onclick="mudarAba('wallet', this)">💳<br>Carteira</button>
+            <button class="nav-item" onclick="mudarAba('reminders', this)">🔔<br>Avisos</button>
+        </nav>
+
+    </div>
+
+</body>
+
+</html>

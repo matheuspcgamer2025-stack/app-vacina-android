@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userEmail() {
+      return request.auth.token.email is string
+        ? request.auth.token.email
+        : '';
+    }
+
+    function ownerByUid(data) {
+      return data.usuarioUid is string
+        && data.usuarioUid == request.auth.uid;
+    }
+
+    function ownerByEmail(data) {
+      return data.usuarioId is string
+        && data.usuarioId == userEmail();
+    }
+
+    function isOwner(data) {
+      return ownerByUid(data) || ownerByEmail(data);
+    }
+
+    function validVaccinePayload(data) {
+      return data.usuarioId is string
+        && (!('usuarioUid' in data) || data.usuarioUid == null || data.usuarioUid is string)
+        && data.perfilId is string
+        && data.nome is string
+        && data.lote is string
+        && data.local is string
+        && data.data is string
+        && data.dataRegistro is string
+        && (!('proximaDose' in data) || data.proximaDose == null || data.proximaDose is string);
+    }
+
+    match /vacinas/{vacinaId} {
+      allow create: if isSignedIn()
+        && validVaccinePayload(request.resource.data)
+        && isOwner(request.resource.data);
+
+      allow read, update, delete: if isSignedIn()
+        && isOwner(resource.data);
+    }
+
+    match /usuarios/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+
+      allow create, update: if isSignedIn()
+        && request.auth.uid == uid
+        && (!('dependentes' in request.resource.data) || request.resource.data.dependentes is list);
+
+      allow delete: if false;
+    }
+  }
+}

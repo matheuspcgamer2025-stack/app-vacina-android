@@ -1,0 +1,11 @@
+{
+  "appId": "com.seuusuario.vacinaapp",
+  "appName": "vacinaApp",
+  "webDir": "www",
+  "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": false,
+      "providers": ["google.com"]
+    }
+  }
+}
