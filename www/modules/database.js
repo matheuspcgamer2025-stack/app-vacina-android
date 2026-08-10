@@ -19,7 +19,7 @@ import {
     deleteUser
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
-// Suas chaves oficiais do console ajustadas e sem cortes de texto
+
 const firebaseConfig = {
     apiKey: "AIzaSyCYSzG4PPzs9w-PT195VZKp2MvYdyX0Puc",
     authDomain: "vacinaapp-2cca0.firebaseapp.com",

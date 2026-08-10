@@ -5,7 +5,7 @@ function apenasDigitos(valor) {
 }
 
 function obterMensagemErroData() {
-    return 'Data inválida. Use o formato dd/mm/aaaa.';
+    return 'Data inválida. Use o formato DD/MM/AAAA.';
 }
 
 function validarData(y, m, d) {
@@ -140,7 +140,7 @@ function configurarCampoData(input) {
     input.dataset.dateInputConfigured = '1';
     input.setAttribute('inputmode', 'numeric');
     input.setAttribute('autocomplete', 'off');
-    input.setAttribute('placeholder', 'dd/mm/aaaa');
+    input.setAttribute('placeholder', 'DD/MM/AAAA');
 
     const { clearBtn } = montarContainerComBotaoLimpar(input);
     const feedback = obterOuCriarFeedback(input);

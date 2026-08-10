@@ -7,7 +7,7 @@ import { inicializarDashboard } from './modules/dashboard.js';
 import { filtrarCalendario } from './modules/calendar.js';
 import { configurarFormularioCarteira, renderizarCarteira, carregarDadosDoFirebase } from './modules/wallet.js';
 import { renderizarLembretes, configurarNotificacoes } from './modules/reminders.js';
-import { buscarEExibirPosto, ativarLocalizacaoEListarPostosProximos } from './modules/gps.js';
+import { buscarEExibirPosto, ativarLocalizacaoEListarPostosProximos, configurarAtualizacaoAutomaticaRaio } from './modules/gps.js';
 import { inicializarCamposDataDigitaveis } from './modules/date-input.js';
 import { appState } from './modules/database.js';
 import { setupAppDialogs } from './modules/dialogs.js';
@@ -118,16 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarCarteira();
     });
 
-    // Permite digitar datas por números (dd/mm/aaaa) com foco por toque no bloco
+    // Permite digitar datas por números (DD/MM/AAAA) com foco por toque no bloco
     inicializarCamposDataDigitaveis();
-
-    // Gerencia o botão de buscar posto de saúde por CEP/Bairro
-    const botaoBuscar = document.getElementById('btn-buscar-posto');
-    if (botaoBuscar) {
-        botaoBuscar.addEventListener('click', () => {
-            buscarEExibirPosto();
-        });
-    }
 
     // Solicita permissão e lista automaticamente os postos mais próximos
     const botaoLocalizacao = document.getElementById('btn-ativar-localizacao');
@@ -136,6 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ativarLocalizacaoEListarPostosProximos();
         });
     }
+
+    configurarAtualizacaoAutomaticaRaio();
 
     // Carrega o tema escuro salvo se o usuário preferir
     const temaSalvo = localStorage.getItem('app_theme');
@@ -208,7 +202,10 @@ window.mudarAba = function(targetId, elementoBotao) {
     }
     if (targetId === 'calendar') filtrarCalendario('criança');
     if (targetId === 'wallet') renderizarCarteira();
-    if (targetId === 'reminders') renderizarLembretes();
+    if (targetId === 'reminders') {
+        renderizarLembretes();
+        ativarLocalizacaoEListarPostosProximos();
+    }
     if (targetId === 'useful-info') inicializarAccordions();
     renderizarIconesLucide();
 };
@@ -258,6 +255,6 @@ function inicializarAccordions() {
 // Vincula as funções necessárias aos escopos de botões do HTML
 window.filtrarCalendario = filtrarCalendario;
 window.configurarNotificacoes = configurarNotificacoes;
-window.localizarPostoMaisProximo = buscarEExibirPosto;
+window.localizarPostoMaisProximo = ativarLocalizacaoEListarPostosProximos;
 window.ativarLocalizacaoEListarPostosProximos = ativarLocalizacaoEListarPostosProximos;
 

@@ -3,7 +3,6 @@ import { calcularIntervaloDose } from './features.js';
 import { parseDateToIso } from './date-input.js';
 import { appConfirm } from './dialogs.js';
 import { formatarDataBr as formatarDataBrDayjs, hojeIso } from './dayjs.js';
-// CORREÇÃO DA IMPORTAÇÃO: Usando a URL completa oficial da Google sem cortes
 import { 
     collection, 
     addDoc, 
@@ -110,7 +109,7 @@ export function configurarFormularioCarteira(onUpdate) {
         const local = document.getElementById('vax-local').value.trim();
 
         if (!dataOriginal) {
-            alert('❌ Informe uma data válida no formato dd/mm/aaaa.');
+            alert('❌ Informe uma data válida no formato DD/MM/AAAA.');
             return;
         }
 
@@ -249,7 +248,10 @@ export function renderizarCarteira(onDeleteCallback) {
                 <p style="font-weight: bold; color: var(--success); font-size: 0.875rem; margin-top: 0.25rem;">🗓️ Aplicada em: ${dataFormatada}</p>
                 ${textoProximaDose}
             </div>
-            <button class="delete-btn" data-id="${vax.id}" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:1.25rem; width: auto; padding: 0.5rem; display: inline-block;">🗑️</button>
+            <button class="delete-btn" data-id="${vax.id}" aria-label="Excluir registro de ${vax.nome}" title="Excluir registro" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:0.9rem; font-weight:700; width: auto; padding: 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                <span aria-hidden="true">🗑️</span>
+                <span>Excluir</span>
+            </button>
         `;
         
         // Mecanismo de exclusão direta do documento no servidor da Google

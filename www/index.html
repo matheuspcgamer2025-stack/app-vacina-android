@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-    <!-- Substitua a linha do viewport atual por esta no seu <head>: -->
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
@@ -156,6 +155,7 @@
                             </svg>
                         </button>
                     </div>
+                    <small id="register-password-strength" class="password-strength-indicator">Força da senha: aguardando digitação.</small>
                 </div>
                 <div class="form-group">
                     <label for="register-confirmar-senha">Confirmar Senha</label>
@@ -176,7 +176,7 @@
                 <div class="form-group terms-group">
                     <label class="terms-option" for="register-aceite-termos">
                         <input type="checkbox" id="register-aceite-termos" required>
-                        <span>Li e aceito os <a href="#" id="link-termos-uso">Termos de Uso</a> e a <a href="#" id="link-politica-privacidade">Política de Privacidade</a>.</span>
+                        <span>Li e aceito os <a href="https://github.io" target="_blank" id="link-termos-uso">Termos de Uso</a> e a <a href="https://github.io" target="_blank" id="link-politica-privacidade">Política de Privacidade</a>.</span>
                     </label>
                 </div>
                 <button type="submit" class="btn-success">Cadastrar e Entrar</button>
@@ -270,6 +270,7 @@
                                 </svg>
                             </button>
                         </div>
+                        <small id="sidebar-password-strength" class="password-strength-indicator">Força da senha: aguardando digitação.</small>
                     </div>
                     <div class="form-group">
                         <label for="sidebar-senha-confirmar">Confirmar Nova Senha</label>
@@ -376,8 +377,7 @@
                 <p><strong>1. Como cadastrar uma vacina?</strong><br> Vá na aba 'Carteira' no menu inferior, preencha o
                     nome, lote, local e data e clique em salvar.</p>
                 <p style="margin-top: 0.5rem;"><strong>2. Como ver os próximos prazos?</strong><br> Na tela 'Início' o sistema calcula automaticamente quais vacinas do SUS ainda faltam no seu histórico.</p>
-                <p style="margin-top: 0.5rem;"><strong>3. Como achar um posto?</strong><br> Na aba 'Avisos', digite seu
-                    bairro ou CEP para listar as Unidades Básicas de Saúde mais próximas.</p>
+                <p style="margin-top: 0.5rem;"><strong>3. Como achar um posto?</strong><br> Na aba 'Avisos', permita o acesso à localização para listar automaticamente as Unidades Básicas de Saúde mais próximas.</p>
             </div>
             <button id="btn-fechar-ajuda" class="btn-primary" style="margin-top: 1.25rem;">Entendido</button>
         </div>
@@ -405,7 +405,7 @@
             <form id="modal-google-birthdate-form">
                 <div class="form-group">
                     <label for="google-birthdate-input">Data de nascimento</label>
-                    <input type="text" id="google-birthdate-input" class="typed-date-input" maxlength="10" placeholder="dd/mm/aaaa" required>
+                    <input type="text" id="google-birthdate-input" class="typed-date-input" maxlength="10" placeholder="DD/MM/AAAA" required>
                 </div>
                 <div class="modal-actions">
                     <button type="button" id="btn-google-birthdate-cancel" class="btn-secondary">Cancelar</button>
@@ -584,6 +584,7 @@
                         </select>
                         <button id="btn-add-dependente" class="btn-success btn-search" type="button">Novo +</button>
                         <button id="btn-remove-dependente" class="btn-danger btn-search" type="button" style="background-color: var(--danger); display: none;">🗑️</button>
+                        
                     </div>
                 </div>
 
@@ -755,11 +756,7 @@
             <section id="screen-reminders" class="sub-screen hidden">
                 <div class="card search-card">
                     <h3>📍 Encontrar Posto de Vacinação</h3>
-                    <p>Digite seu bairro ou CEP para listar as Unidades Básicas de Saúde (UBS) mais próximas.</p>
-                    <div class="search-box">
-                        <input type="text" id="input-busca-local" placeholder="Ex: Centro, Messejana ou CEP">
-                        <button id="btn-buscar-posto" class="btn-success btn-search">Buscar</button>
-                    </div>
+                    <p>Usamos a localização em tempo real do seu celular para listar automaticamente as Unidades Básicas de Saúde (UBS) mais próximas.</p>
                     <div class="search-actions">
                         <label for="filtro-raio-km" class="radius-label">Raio de busca por localização</label>
                         <select id="filtro-raio-km" class="radius-select">
@@ -768,7 +765,7 @@
                             <option value="10" selected>Até 10 km</option>
                             <option value="20">Até 20 km</option>
                         </select>
-                        <button id="btn-ativar-localizacao" class="btn-primary" type="button">📍 Ativar localização e ver postos mais próximos</button>
+                        <button id="btn-ativar-localizacao" class="btn-primary" type="button">📍 Atualizar postos próximos pela minha localização</button>
                     </div>
                     <div id="lista-postos-resultados" class="results-container"></div>
                 </div>

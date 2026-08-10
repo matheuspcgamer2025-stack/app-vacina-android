@@ -22,6 +22,5 @@ export function mudarAba(targetId, elementoBotao) {
         elementoBotao.classList.add('nav-item-activated');
     });
 
-    // A atualização do texto antigo foi desativada para manter a logo fixa e profissional no topo!
 }
 

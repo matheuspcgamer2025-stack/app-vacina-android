@@ -387,13 +387,6 @@ function obterContextoRegional() {
         // Sem contexto salvo
     }
 
-    const inputBusca = document.getElementById('input-busca-local');
-    const termo = String(inputBusca?.value || '').trim();
-    if (termo) {
-        if (/^\d{5,8}$/.test(termo.replace(/\D/g, ''))) return { bairro: '', cep: termo };
-        return { bairro: termo, cep: '' };
-    }
-
     return { bairro: 'Messejana', cep: '' };
 }
 
@@ -770,9 +763,9 @@ function configurarAcoesRapidas() {
         btnPosto.addEventListener('click', () => {
             navegarParaAba('reminders');
             setTimeout(() => {
-                const inputBusca = document.getElementById('input-busca-local');
-                inputBusca?.focus();
-                inputBusca?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const botaoLocalizacao = document.getElementById('btn-ativar-localizacao');
+                botaoLocalizacao?.focus();
+                botaoLocalizacao?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 80);
         });
     }
@@ -826,9 +819,9 @@ function configurarContadoresNavegaveis() {
         cardPendentes.addEventListener('click', () => {
             navegarParaAba('reminders');
             setTimeout(() => {
-                const buscaLocal = document.getElementById('input-busca-local');
-                buscaLocal?.focus();
-                buscaLocal?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const botaoLocalizacao = document.getElementById('btn-ativar-localizacao');
+                botaoLocalizacao?.focus();
+                botaoLocalizacao?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 80);
         });
     }

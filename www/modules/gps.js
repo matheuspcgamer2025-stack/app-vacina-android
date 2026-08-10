@@ -10,6 +10,7 @@ const BANCO_POSTOS = [
 ];
 
 let postosCache = null;
+let ultimoOrdenado = null;
 
 function salvarContextoRegional({ bairro = '', cep = '', origem = 'busca' }) {
     const payload = {
@@ -112,6 +113,43 @@ function renderizarPostos(container, postos) {
     });
 }
 
+function filtrarPorRaioESelecionarTop(ordenados) {
+    const raioKm = obterRaioSelecionadoKm();
+    const filtradosPorRaio = raioKm > 0
+        ? ordenados.filter(p => p.distanciaKm <= raioKm)
+        : ordenados;
+
+    return {
+        raioKm,
+        resultados: filtradosPorRaio.slice(0, 5)
+    };
+}
+
+function renderizarListaPorRaio(containerResultados, ordenados) {
+    const { raioKm, resultados } = filtrarPorRaioESelecionarTop(ordenados);
+
+    if (resultados.length === 0) {
+        const mensagem = `⚠️ Não encontramos postos dentro do raio selecionado (${raioKm} km). Tente aumentar o alcance.`;
+        renderizarMensagem(containerResultados, `
+            <div style="padding: 15px; background: #fff3cd; color: #856404; border-radius: 8px; font-size: 14px; text-align: center;">
+                ${mensagem}
+            </div>
+        `);
+        return;
+    }
+
+    const maisProximo = resultados[0];
+    if (maisProximo) {
+        salvarContextoRegional({
+            bairro: maisProximo.bairro || '',
+            cep: (maisProximo.cep || '').replace(/\D/g, ''),
+            origem: 'gps'
+        });
+    }
+
+    renderizarPostos(containerResultados, resultados);
+}
+
 async function obterLocalizacaoAtual() {
     const GeolocationPlugin = window.Capacitor?.Plugins?.Geolocation;
 
@@ -165,65 +203,7 @@ async function carregarPostosFirestore() {
 }
 
 export async function buscarEExibirPosto() {
-    const termoRaw = document.getElementById('input-busca-local').value.trim();
-    const termoBusca = termoRaw.toLowerCase();
-    const containerResultados = document.getElementById('lista-postos-resultados');
-
-    if (!termoRaw) {
-        alert("Por favor, digite um bairro ou CEP para realizar a busca.");
-        return;
-    }
-
-    // Determina se o usuário digitou um CEP (apenas números) ou um texto de bairro/nome
-    const apenasDigitos = termoRaw.replace(/\D/g, '');
-    const isCep = apenasDigitos.length >= 5; // considera CEP se tiver 5 ou mais dígitos
-
-    salvarContextoRegional({
-        bairro: isCep ? '' : termoRaw,
-        cep: isCep ? apenasDigitos : '',
-        origem: 'busca-manual'
-    });
-
-    // Para buscas por texto, exige pelo menos 3 caracteres úteis para evitar resultados triviais
-    if (!isCep && termoBusca.length < 3) {
-        containerResultados.innerHTML = `
-            <div style="padding: 15px; background: #fff3cd; color: #856404; border-radius: 8px; font-size: 14px; text-align: center;">
-                ℹ️ Digite pelo menos 3 caracteres do bairro ou 5 dígitos do CEP para pesquisar.
-            </div>
-        `;
-        return;
-    }
-
-    const postosDisponiveis = await carregarPostosFirestore() || BANCO_POSTOS;
-
-    // Busca mais restrita: se for CEP, compara apenas dígitos; se for texto, exige correspondência relevante
-    const postosEncontrados = postosDisponiveis.filter(posto => {
-        if (isCep) {
-            const cepSem = (posto.cep || '').replace(/\D/g, '');
-            return cepSem.includes(apenasDigitos);
-        }
-
-        // campos a serem pesquisados
-        const campos = [posto.nome, posto.bairro, posto.endereco, posto.vacinas, posto.funcionamento]
-            .filter(Boolean)
-            .map(s => s.toLowerCase());
-
-        // verifica se qualquer campo contém a string de busca (requisição mínima já feita)
-        return campos.some(c => c.includes(termoBusca));
-    });
-
-    limparResultados(containerResultados);
-
-    if (postosEncontrados.length === 0) {
-        renderizarMensagem(containerResultados, `
-            <div style="padding: 15px; background: #fff3cd; color: #856404; border-radius: 8px; font-size: 14px; text-align: center;">
-                ❌ Nenhum posto encontrado para "${termoRaw}". Verifique a ortografia ou tente outro CEP/bairro.
-            </div>
-        `);
-        return;
-    }
-
-    renderizarPostos(containerResultados, postosEncontrados);
+    return ativarLocalizacaoEListarPostosProximos();
 }
 
 export async function ativarLocalizacaoEListarPostosProximos() {
@@ -263,33 +243,8 @@ export async function ativarLocalizacaoEListarPostosProximos() {
                 distanciaKm: haversineKm(localizacao.lat, localizacao.lng, p.lat, p.lng)
             }))
             .sort((a, b) => a.distanciaKm - b.distanciaKm);
-
-        const raioKm = obterRaioSelecionadoKm();
-        const filtradosPorRaio = raioKm > 0
-            ? ordenados.filter(p => p.distanciaKm <= raioKm)
-            : ordenados;
-
-        const topResultados = filtradosPorRaio.slice(0, 5);
-
-        if (topResultados.length === 0) {
-            renderizarMensagem(containerResultados, `
-                <div style="padding: 15px; background: #fff3cd; color: #856404; border-radius: 8px; font-size: 14px; text-align: center;">
-                    ⚠️ Não encontramos postos dentro do raio selecionado (${raioKm} km). Tente aumentar o alcance.
-                </div>
-            `);
-            return;
-        }
-
-        const maisProximo = topResultados[0];
-        if (maisProximo) {
-            salvarContextoRegional({
-                bairro: maisProximo.bairro || '',
-                cep: (maisProximo.cep || '').replace(/\D/g, ''),
-                origem: 'gps'
-            });
-        }
-
-        renderizarPostos(containerResultados, topResultados);
+        ultimoOrdenado = ordenados;
+        renderizarListaPorRaio(containerResultados, ordenados);
     } catch (error) {
         console.error('Erro ao obter localização do dispositivo:', error);
 
@@ -308,4 +263,22 @@ export async function ativarLocalizacaoEListarPostosProximos() {
             </div>
         `);
     }
+}
+
+export function configurarAtualizacaoAutomaticaRaio() {
+    const selectRaio = document.getElementById('filtro-raio-km');
+    const containerResultados = document.getElementById('lista-postos-resultados');
+
+    if (!selectRaio || !containerResultados) return;
+    if (selectRaio.dataset.autoRaioBound === '1') return;
+    selectRaio.dataset.autoRaioBound = '1';
+
+    selectRaio.addEventListener('change', async () => {
+        if (Array.isArray(ultimoOrdenado) && ultimoOrdenado.length > 0) {
+            renderizarListaPorRaio(containerResultados, ultimoOrdenado);
+            return;
+        }
+
+        await ativarLocalizacaoEListarPostosProximos();
+    });
 }

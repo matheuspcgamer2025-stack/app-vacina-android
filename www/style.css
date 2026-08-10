@@ -327,6 +327,31 @@ body.dark-theme .btn-google {
     overflow: hidden;
 }
 
+.password-wrapper.password-valid {
+    border-color: var(--success);
+    box-shadow: 0 0 0 1px rgba(92, 184, 92, 0.35);
+}
+
+.password-wrapper.password-invalid {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 1px rgba(217, 83, 79, 0.35);
+}
+
+.password-strength-indicator {
+    display: block;
+    margin-top: 0.45rem;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+
+.password-strength-indicator.strength-ok {
+    color: var(--success);
+}
+
+.password-strength-indicator.strength-bad {
+    color: var(--danger);
+}
+
 .password-wrapper .password-input { 
     flex: 1;
     background: transparent;
@@ -1457,6 +1482,15 @@ body .tab-btn.active {
 
 .search-actions button {
     width: 100%;
+}
+
+.notify-card p {
+    margin-top: 0.35rem;
+    margin-bottom: 0.9rem;
+}
+
+.notify-card #btn-toggle-notifications {
+    margin-top: 0.35rem;
 }
 
 .radius-label {

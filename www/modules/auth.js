@@ -51,6 +51,84 @@ function validarSenhaForte(senha) {
     return REGEX_SENHA.test(senha);
 }
 
+function analisarRequisitosSenha(senha) {
+    const texto = String(senha || '');
+    const faltas = [];
+
+    if (texto.length < 8) faltas.push('mínimo de 8 caracteres');
+    if (!/[A-Z]/.test(texto)) faltas.push('uma letra maiúscula');
+    if (!/[a-z]/.test(texto)) faltas.push('uma letra minúscula');
+    if (!/\d/.test(texto)) faltas.push('um número');
+
+    return {
+        valida: faltas.length === 0,
+        faltas
+    };
+}
+
+function aplicarEstadoBordaSenha(input, estado) {
+    const wrapper = input?.closest('.password-wrapper');
+    if (!wrapper) return;
+
+    wrapper.classList.remove('password-valid', 'password-invalid');
+    if (estado === 'valid') wrapper.classList.add('password-valid');
+    if (estado === 'invalid') wrapper.classList.add('password-invalid');
+}
+
+function formatarListaFaltasSenha(faltas) {
+    if (!Array.isArray(faltas) || faltas.length === 0) return '';
+    if (faltas.length === 1) return faltas[0];
+    if (faltas.length === 2) return `${faltas[0]} e ${faltas[1]}`;
+    return `${faltas.slice(0, -1).join(', ')} e ${faltas[faltas.length - 1]}`;
+}
+
+function configurarIndicadorForcaSenhaCadastro() {
+    const inputSenha = document.getElementById('register-senha');
+    const inputConfirmacao = document.getElementById('register-confirmar-senha');
+    const indicador = document.getElementById('register-password-strength');
+
+    if (!inputSenha || !inputConfirmacao || !indicador) return;
+    if (inputSenha.dataset.strengthBound === '1') return;
+    inputSenha.dataset.strengthBound = '1';
+
+    const atualizar = () => {
+        const senha = String(inputSenha.value || '');
+        const confirmacao = String(inputConfirmacao.value || '');
+        const analise = analisarRequisitosSenha(senha);
+
+        indicador.classList.remove('strength-ok', 'strength-bad');
+
+        if (!senha) {
+            aplicarEstadoBordaSenha(inputSenha, null);
+            aplicarEstadoBordaSenha(inputConfirmacao, null);
+            indicador.textContent = 'Força da senha: aguardando digitação.';
+            return;
+        }
+
+        if (analise.valida) {
+            aplicarEstadoBordaSenha(inputSenha, 'valid');
+            indicador.classList.add('strength-ok');
+            indicador.textContent = 'Força da senha: forte. Padrão de segurança atendido.';
+        } else {
+            aplicarEstadoBordaSenha(inputSenha, 'invalid');
+            indicador.classList.add('strength-bad');
+            indicador.textContent = `Força da senha: fraca. Falta ${formatarListaFaltasSenha(analise.faltas)}.`;
+        }
+
+        if (!confirmacao) {
+            aplicarEstadoBordaSenha(inputConfirmacao, null);
+            return;
+        }
+
+        const confirmaOk = analise.valida && confirmacao === senha;
+        aplicarEstadoBordaSenha(inputConfirmacao, confirmaOk ? 'valid' : 'invalid');
+    };
+
+    inputSenha.addEventListener('input', atualizar);
+    inputConfirmacao.addEventListener('input', atualizar);
+    atualizar();
+}
+
 function normalizarIdentificador(id) {
     const texto = id.trim();
     const validacao = validarIdentificador(texto);
@@ -265,7 +343,7 @@ function coletarDataNascimentoNoLoginGoogle() {
                 return;
             }
 
-            alert('⚠️ Data inválida. Informe no formato dd/mm/aaaa e com data real.');
+            alert('⚠️ Data inválida. Informe no formato DD/MM/AAAA e com data real.');
             input.focus();
         };
 
@@ -336,6 +414,7 @@ export function inicializarAutentication(onLoginSuccess) {
     const appMain = document.getElementById('app-main');
 
     observarSessaoAutenticada(screenLogin, appMain, onLoginSuccess);
+    configurarIndicadorForcaSenhaCadastro();
 
     // Alternância visual entre telas de Login e Cadastro
     document.getElementById('link-cadastro')?.addEventListener('click', (e) => {
@@ -470,8 +549,19 @@ export function inicializarAutentication(onLoginSuccess) {
             return;
         }
 
-        if (!validacao.valido || !validarSenhaForte(senha) || senha !== conf) {
-            alert("❌ Verifique os campos! As senhas devem ser iguais e seguras.");
+        if (!validacao.valido) {
+            alert('❌ Informe um CPF ou e-mail válido para criar a conta.');
+            return;
+        }
+
+        const analiseSenha = analisarRequisitosSenha(senha);
+        if (!analiseSenha.valida) {
+            alert(`❌ A senha não atende ao padrão de segurança. Falta ${formatarListaFaltasSenha(analiseSenha.faltas)}.`);
+            return;
+        }
+
+        if (senha !== conf) {
+            alert('❌ A confirmação de senha não confere com a senha digitada.');
             return;
         }
 

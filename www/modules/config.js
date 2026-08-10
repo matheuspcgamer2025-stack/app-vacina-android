@@ -2,10 +2,6 @@
  * Arquivo de Configuração Global da Aplicação
  * Este arquivo contém constantes e configurações centralizadas
  */
-
-// Configuração de Suporte via WhatsApp
-// Formato: Número com código do país + DDD + número
-// Exemplo: 5588999999999 = +55 (Brasil) 88 (Ceará) 99999-9999
 export const WHATSAPP_CONFIG = {
     // Número de WhatsApp para suporte (ALTERE AQUI!)
     SUPPORT_NUMBER: '5585989963127',
