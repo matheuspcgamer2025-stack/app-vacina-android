@@ -4,7 +4,7 @@ android {
     namespace = "com.seuusuario.vacinaapp"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.seuusuario.vacinaapp"
+        applicationId "com.matheus.vacina"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
