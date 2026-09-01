@@ -7,6 +7,35 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:317556925550:android:fa8ba93a8d1b8e7adcf27f",
+        "android_client_info": {
+          "package_name": "com.matheus.vacina"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "317556925550-6433bl2adqnlg6t4li83mptcrcc3ec9v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBYx1ViIj9VCiTupjElHC0BylaATqUtIM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "317556925550-6433bl2adqnlg6t4li83mptcrcc3ec9v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:317556925550:android:d184fd59796548eddcf27f",
         "android_client_info": {
           "package_name": "com.seuusuario.vacinaapp"
@@ -19,6 +48,14 @@
           "android_info": {
             "package_name": "com.seuusuario.vacinaapp",
             "certificate_hash": "21977187dd48f98509ef53280c6ed01affe53726"
+          }
+        },
+        {
+          "client_id": "317556925550-qhor6t5egacposj0d8qru094g76pps2i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.seuusuario.vacinaapp",
+            "certificate_hash": "36c588ee9775dcd03db1bbf1cff0174f3deb1096"
           }
         },
         {
